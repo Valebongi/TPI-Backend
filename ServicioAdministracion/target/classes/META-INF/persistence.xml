@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
   <persistence-unit name="pu-backend" transaction-type="RESOURCE_LOCAL">
-    <class>utnfc.isi.back.sim.domain.Country</class>
-    <class>utnfc.isi.back.sim.domain.Theme</class>
-    <class>utnfc.isi.back.sim.domain.AgeGroup</class>
-    <class>utnfc.isi.back.sim.domain.LegoSet</class>
+  <class>utnfc.isi.back.sim.domain.Camion</class>
+  <class>utnfc.isi.back.sim.domain.Deposito</class>
+  <class>utnfc.isi.back.sim.domain.Tarifa</class>
 
     <properties>
       <!-- H2 en memoria -->
@@ -13,8 +12,8 @@
       <property name="jakarta.persistence.jdbc.user" value="sa"/>
       <property name="jakarta.persistence.jdbc.password" value=""/>
 
-      <!-- Generación de esquema vía script (tu ddl.sql) -->
-      <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
+  <!-- Generación de esquema vía script (ddl_admin.sql) -->
+  <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
 
       <!-- Log SQL (opcional) -->
       <property name="hibernate.show_sql" value="false"/>

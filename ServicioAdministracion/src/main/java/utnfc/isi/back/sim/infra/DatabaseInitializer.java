@@ -18,8 +18,8 @@ public final class DatabaseInitializer {
     private static final String USER = "sa";
     private static final String PASS = "";
 
-    // Ruta del DDL dentro de resources:
-    private static final String DDL_CLASSPATH = "/sql/ddl_legos.sql";
+    // Ruta del DDL dentro de resources para ServicioAdministracion:
+    private static final String DDL_CLASSPATH = "/sql/ddl_admin.sql";
 
     private DatabaseInitializer() {}
 
@@ -28,31 +28,20 @@ public final class DatabaseInitializer {
             var in = DatabaseInitializer.class.getResourceAsStream(DDL_CLASSPATH);
             if (in == null) {
                 throw new IllegalStateException("No se encontró el recurso " + DDL_CLASSPATH +
-                        " en el classpath (¿está en src/main/resources/sql/ddl_legos.sql?).");
+                        " en el classpath (¿está en src/main/resources/sql/ddl_admin.sql?).");
             }
             try (var reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
                 // Ejecuta TODO el script (soporta ;, CRLF, comentarios, etc.)
                 RunScript.execute(cn, reader);
             }
-            // Validación rápida: asegurar que las secuencias de LEGO existen
+                // Validación rápida: asegurar que las tablas principales existen
             try (var ps = cn.prepareStatement(
-                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_NAME = 'SEQ_LEGO_SET_ID'")) {
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CAMIONES'")) {
                 try (var rs = ps.executeQuery()) {
                     rs.next();
                     if (rs.getInt(1) == 0) {
-                        throw new IllegalStateException("La secuencia SEQ_LEGO_SET_ID no existe tras correr el DDL. " +
-                                "Revisá el contenido del ddl_legos.sql.");
-                    }
-                }
-            }
-            // Validar que las tablas principales existen
-            try (var ps = cn.prepareStatement(
-                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'LEGO_SETS'")) {
-                try (var rs = ps.executeQuery()) {
-                    rs.next();
-                    if (rs.getInt(1) == 0) {
-                        throw new IllegalStateException("La tabla LEGO_SETS no existe tras correr el DDL. " +
-                                "Revisá el contenido del ddl_legos.sql.");
+                        throw new IllegalStateException("La tabla CAMIONES no existe tras correr el DDL. " +
+                                "Revisá el contenido del ddl_admin.sql.");
                     }
                 }
             }

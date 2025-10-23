@@ -1,0 +1,15 @@
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\AppMain.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\controller\CamionController.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\controller\DepositoController.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\controller\HomeController.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\controller\TarifaController.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\domain\Camion.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\domain\Deposito.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\domain\Tarifa.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\repository\CamionRepository.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\repository\DepositoRepository.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\repository\TarifaRepository.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\service\CamionService.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\service\DepositoService.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\service\LegoSetService.java
+C:\Codigo\TPI-Backend\TPI-Backend\ServicioAdministracion\src\main\java\utnfc\isi\back\sim\service\TarifaService.java
