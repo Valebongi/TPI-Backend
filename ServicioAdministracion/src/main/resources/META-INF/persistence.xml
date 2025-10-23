@@ -4,16 +4,17 @@
   <class>utnfc.isi.back.sim.domain.Camion</class>
   <class>utnfc.isi.back.sim.domain.Deposito</class>
   <class>utnfc.isi.back.sim.domain.Tarifa</class>
+  <class>utnfc.isi.back.sim.domain.ParametroGlobal</class>
 
     <properties>
-      <!-- H2 en memoria -->
-      <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
-      <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:mem:backdb;DB_CLOSE_DELAY=-1;MODE=LEGACY"/>
-      <property name="jakarta.persistence.jdbc.user" value="sa"/>
-      <property name="jakarta.persistence.jdbc.password" value=""/>
+      <!-- PostgreSQL -->
+      <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+      <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/tpi_backend_admin_db"/>
+      <property name="jakarta.persistence.jdbc.user" value="postgres"/>
+      <property name="jakarta.persistence.jdbc.password" value="postgres"/>
 
-  <!-- Generación de esquema vía script (ddl_admin.sql) -->
-  <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
+      <!-- Generación automática de esquema -->
+      <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
 
       <!-- Log SQL (opcional) -->
       <property name="hibernate.show_sql" value="false"/>

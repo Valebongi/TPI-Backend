@@ -1,0 +1,678 @@
+1) MS de Pedidos (Orders MS) — Front-facing / Cliente
+Propósito / responsabilidad
+Registrar nueva Solicitud de transporte (cliente crea solicitud + crea contenedor si corresponde).
+
+
+Registro / consulta de Cliente (si no existe, crear).
+
+
+Mostrar estado/seguimiento del envío al cliente (lectura).
+
+
+Calcular y devolver estimaciones iniciales (costoEstimado / tiempoEstimado) consultando al Logistics MS/Fleet (ver flujo).
+
+
+Entidades / clases (del modelo mínimo)
+Solicitud (número, contenedorId, clienteId, costoEstimado, tiempoEstimado, costoFinal, tiempoReal, estado)
+
+
+Contenedor (id, peso, volumen, estado, clienteId)
+
+
+Cliente (id, nombre, apellido, email, teléfono, keycloakId opcional)
+
+
+DB: PostgreSQL (base de datos propia del servicio — Database per Service recomendado para autonomía y evitar acoplamiento). Justificación: Requests tienen ciclo de vida propio, cambios frecuentes por usuarios.
+Tecnologías / despliegue
+Java + Spring Boot (requisito del enunciado). Docker container.
+
+
+API Gateway delante (ruta /api/orders/**).
+
+
+Comunicación
+Externo (cliente → API Gateway → Orders MS): REST over HTTPS, JSON.
+
+
+Interno (Orders → Logistics): síncrono REST/HTTP JSON para solicitar rutas tentativas; async events (Kafka) para notificar cambios importantes (SolicitudCreada, RutaAsignada) que otros servicios consumen. Razonamiento: peticiones puntuales de cálculo/estimación requieren respuesta inmediata (HTTP), pero notificaciones de dominio deben ser decoupled (Kafka) para resiliencia.
+
+
+
+Método
+Endpoint
+Descripción
+Autorización
+GET
+/clientes
+Listar todos los clientes
+ADMIN
+GET
+/clientes/{id}
+Consultar cliente por ID
+ADMIN / CLIENTE
+POST
+/clientes
+Registrar nuevo cliente
+ADMIN
+PUT
+/clientes/{id}
+Modificar datos de cliente
+ADMIN / CLIENTE
+GET
+/contenedores
+Listar contenedores
+ADMIN / CLIENTE
+GET
+/contenedores/{id}
+Consultar un contenedor
+ADMIN / CLIENTE
+POST
+/contenedores
+Registrar contenedor de cliente
+ADMIN / CLIENTE
+PUT
+/contenedores/{id}
+Actualizar datos de contenedor
+ADMIN
+GET
+/solicitudes
+Listar solicitudes
+ADMIN / CLIENTE
+GET
+/solicitudes/{id}
+Ver detalles de solicitud
+ADMIN / CLIENTE
+POST
+/solicitudes
+Crear solicitud de transporte
+CLIENTE
+PUT
+/solicitudes/{id}/estado
+Cambiar estado (pendiente, en tránsito, completada)
+ADMIN / LOGÍSTICA
+GET
+/solicitudes/{id}/seguimiento
+Ver ubicación actual del contenedor (consulta a Logística)
+CLIENTE
+
+
+Roles (Keycloak)
+Cliente: puede crear/consultar sólo sus solicitudes.
+
+
+Operador/Admin: puede ver/editar (via Admin UI / admin endpoints).
+
+
+Transportista: sólo lectura de lo asignado (por ID/rol).
+
+
+
+2) MS de Logística (Routing / Execution MS) — Core domain
+Propósito / responsabilidad
+Generar rutas tentativas (lista de tramos) y costes aproximados.
+
+
+Asignar / planificar tramos a camiones (según disponibilidad y restricciones de peso/volumen).
+
+
+Registrar inicio/fin de tramo (transportista).
+
+
+Calcular costos reales y tiempos reales al finalizar (guardar en Solicitud).
+
+
+Integración con API externa: Google Maps Directions para distancias/tiempos entre coordenadas.
+
+
+Entidades / clases
+Ruta (solicitudId, cantidadTramos, cantidadDepositos, listaTramos)
+
+
+Tramo (id, origen(coordenadas), destino(coordenadas), tipo, estado, costoAproximado, costoReal, fechaHoraInicio, fechaHoraFin, camionId)
+
+
+(Referencias a Contenedor y Solicitud por id)
+
+
+DB: PostgreSQL propia del servicio (almacena rutas y tramos; puede almacenar copias shadow de algunos datos para cálculo sin afectar maestros). Justificación: lógica de rutas es core, necesita transaccionalidad propia.
+Tecnologías / despliegue
+Java + Spring Boot, Docker.
+
+
+Biblioteca HTTP client para Google Maps (cache de resultados para evitar límites).
+
+
+Comunicación
+Recibe solicitudes de estimación desde Orders MS por REST/HTTP JSON.
+
+
+Llama a Fleet MS (síncrono REST) para consultar camiones elegibles / tarifas por camión cuando asigna.
+
+
+Publica eventos asíncronos (Kafka): RutaGenerada, TramoAsignado, TramoIniciado, TramoFinalizado (los consume Orders MS y Fleet MS). Razonamiento: planificación y ejecución generan muchos eventos y conviene desacoplar.
+
+
+Para operaciones críticas (inicio/fin tramo desde app de transportista): REST sobre HTTPS (transportista -> API GW -> Routing MS) y luego el MS publica evento.
+
+
+
+Método
+Endpoint
+Descripción
+Autorización
+GET
+/rutas
+Listar rutas activas
+ADMIN / LOGÍSTICA
+GET
+/rutas/{id}
+Consultar detalle de una ruta
+ADMIN / LOGÍSTICA
+POST
+/rutas
+Crear una nueva ruta asociada a una solicitud
+LOGÍSTICA
+PUT
+/rutas/{id}
+Actualizar estado o información de la ruta
+LOGÍSTICA
+GET
+/rutas/{id}/tramos
+Listar tramos de una ruta
+LOGÍSTICA
+POST
+/rutas/{id}/tramos
+Agregar un tramo nuevo
+LOGÍSTICA
+PUT
+/tramos/{id}
+Actualizar tramo (costo real, hora fin, etc.)
+LOGÍSTICA
+GET
+/rutas/{id}/posición
+Obtener posición actual del camión (consulta a API de Google Maps)
+CLIENTE / LOGÍSTICA
+
+
+
+
+Reglas de negocio clave implementadas aquí
+Validación: un camión no puede exceder peso/volumen del contenedor (RN obligatoria).
+
+
+Cálculo de costos reales (suma: km * costo por km del camión + consumo * precio litro + estadía depósitos).
+
+
+
+3) MS Administración / Fleet & Master Data (Fleet MS) — Admin & maestros
+Propósito / responsabilidad
+ABM de Depósitos, Camiones, Tarifas, Parámetros globales (valor litro, cargo gestión por tramo, rangos por volumen/peso, costo estadía por depósito).
+
+
+Proveer datos para cálculo de estimaciones y asignaciones (camiones aptos, costos por km, consumos).
+
+
+Exponer listados de contenedores en depósitos (estado), camiones libres/ocupados (para interfaz Operador).
+
+
+Entidades / clases
+Depósito (id, nombre, dirección, coordenadas, costoEstadiaDiario)
+
+
+Camión (id, dominio, nombreTransportista, telefono, capacidadPeso, capacidadVolumen, disponibilidad, costoBaseKm, consumoPromedio)
+
+
+Tarifa (modelo elegido por el grupo — sugerencia: por rangos de volumen/peso o por tipo de camión)
+
+
+ParametroGlobal (valorLitro, cargoGestionPorTramo, etc.)
+
+
+DB: PostgreSQL propia (datos maestros). Justificación: datos maestros deben ser transaccionales y versionados/ auditables.
+Tecnologías / despliegue
+Java + Spring Boot, Docker. Admin UI (solo para Operador/Administrador roles). Swagger para endpoints ABM.
+
+
+Comunicación
+Expuesto por REST/HTTPS JSON para consultas internas (Logistics MS solicita camiones aptos, tarifas).
+
+
+Consumo de eventos Kafka para actualizar estados locales si es necesario (por ejemplo TramoIniciado -> poner camion como ocupado).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Método
+Endpoint
+Descripción
+Autorización
+GET
+/camiones
+Listar camiones disponibles
+ADMIN / LOGÍSTICA
+GET
+/camiones/{id}
+Consultar camión
+ADMIN / LOGÍSTICA
+POST
+/camiones
+Registrar nuevo camión
+ADMIN
+PUT
+/camiones/{id}
+Modificar estado o datos
+ADMIN
+GET
+/depósitos
+Listar depósitos
+ADMIN / LOGÍSTICA
+GET
+/depósitos/{id}
+Consultar depósito
+ADMIN / LOGÍSTICA
+POST
+/depósitos
+Registrar nuevo depósito
+ADMIN
+GET
+/tarifas
+Listar tarifas disponibles
+ADMIN / LOGÍSTICA
+GET
+/tarifas/{id}
+Consultar detalle de tarifa
+ADMIN / LOGÍSTICA
+POST
+/tarifas
+Crear nueva tarifa
+ADMIN
+PUT
+/tarifas/{id}
+Actualizar valor de tarifa
+ADMIN
+
+
+     📞COMUNICACIÓN ENTRE MICROSERVICIOS:
+
+Origen
+Destino
+Canal
+Propósito
+Pedidos
+Logística
+REST (JSON)
+Consultar estado de ruta y ubicación
+Logística
+Administración
+REST (JSON)
+Obtener datos de camiones, depósitos, tarifas
+Logística
+Google Maps API
+HTTPS (JSON)
+Obtener datos geográficos
+Todos
+Keycloak
+HTTPS (JWT)
+Autenticación y roles
+
+
+
+
+
+1) MS de Pedidos (Orders MS) — Front-facing / Cliente
+Propósito / responsabilidad
+Registrar nueva Solicitud de transporte (cliente crea solicitud + crea contenedor si corresponde).
+
+
+Registro / consulta de Cliente (si no existe, crear).
+
+
+Mostrar estado/seguimiento del envío al cliente (lectura).
+
+
+Calcular y devolver estimaciones iniciales (costoEstimado / tiempoEstimado) consultando al Logistics MS/Fleet (ver flujo).
+
+
+Entidades / clases (del modelo mínimo)
+Solicitud (número, contenedorId, clienteId, costoEstimado, tiempoEstimado, costoFinal, tiempoReal, estado)
+
+
+Contenedor (id, peso, volumen, estado, clienteId)
+
+
+Cliente (id, nombre, apellido, email, teléfono, keycloakId opcional)
+
+
+DB: PostgreSQL (base de datos propia del servicio — Database per Service recomendado para autonomía y evitar acoplamiento). Justificación: Requests tienen ciclo de vida propio, cambios frecuentes por usuarios.
+Tecnologías / despliegue
+Java + Spring Boot (requisito del enunciado). Docker container.
+
+
+API Gateway delante (ruta /api/orders/**).
+
+
+Comunicación
+Externo (cliente → API Gateway → Orders MS): REST over HTTPS, JSON.
+
+
+Interno (Orders → Logistics): síncrono REST/HTTP JSON para solicitar rutas tentativas; async events (Kafka) para notificar cambios importantes (SolicitudCreada, RutaAsignada) que otros servicios consumen. Razonamiento: peticiones puntuales de cálculo/estimación requieren respuesta inmediata (HTTP), pero notificaciones de dominio deben ser decoupled (Kafka) para resiliencia.
+
+
+
+Método
+Endpoint
+Descripción
+Autorización
+GET
+/clientes
+Listar todos los clientes
+ADMIN
+GET
+/clientes/{id}
+Consultar cliente por ID
+ADMIN / CLIENTE
+POST
+/clientes
+Registrar nuevo cliente
+ADMIN
+PUT
+/clientes/{id}
+Modificar datos de cliente
+ADMIN / CLIENTE
+GET
+/contenedores
+Listar contenedores
+ADMIN / CLIENTE
+GET
+/contenedores/{id}
+Consultar un contenedor
+ADMIN / CLIENTE
+POST
+/contenedores
+Registrar contenedor de cliente
+ADMIN / CLIENTE
+PUT
+/contenedores/{id}
+Actualizar datos de contenedor
+ADMIN
+GET
+/solicitudes
+Listar solicitudes
+ADMIN / CLIENTE
+GET
+/solicitudes/{id}
+Ver detalles de solicitud
+ADMIN / CLIENTE
+POST
+/solicitudes
+Crear solicitud de transporte
+CLIENTE
+PUT
+/solicitudes/{id}/estado
+Cambiar estado (pendiente, en tránsito, completada)
+ADMIN / LOGÍSTICA
+GET
+/solicitudes/{id}/seguimiento
+Ver ubicación actual del contenedor (consulta a Logística)
+CLIENTE
+
+
+Roles (Keycloak)
+Cliente: puede crear/consultar sólo sus solicitudes.
+
+
+Operador/Admin: puede ver/editar (via Admin UI / admin endpoints).
+
+
+Transportista: sólo lectura de lo asignado (por ID/rol).
+
+
+
+2) MS de Logística (Routing / Execution MS) — Core domain
+Propósito / responsabilidad
+Generar rutas tentativas (lista de tramos) y costes aproximados.
+
+
+Asignar / planificar tramos a camiones (según disponibilidad y restricciones de peso/volumen).
+
+
+Registrar inicio/fin de tramo (transportista).
+
+
+Calcular costos reales y tiempos reales al finalizar (guardar en Solicitud).
+
+
+Integración con API externa: Google Maps Directions para distancias/tiempos entre coordenadas.
+
+
+Entidades / clases
+Ruta (solicitudId, cantidadTramos, cantidadDepositos, listaTramos)
+
+
+Tramo (id, origen(coordenadas), destino(coordenadas), tipo, estado, costoAproximado, costoReal, fechaHoraInicio, fechaHoraFin, camionId)
+
+
+(Referencias a Contenedor y Solicitud por id)
+
+
+DB: PostgreSQL propia del servicio (almacena rutas y tramos; puede almacenar copias shadow de algunos datos para cálculo sin afectar maestros). Justificación: lógica de rutas es core, necesita transaccionalidad propia.
+Tecnologías / despliegue
+Java + Spring Boot, Docker.
+
+
+Biblioteca HTTP client para Google Maps (cache de resultados para evitar límites).
+
+
+Comunicación
+Recibe solicitudes de estimación desde Orders MS por REST/HTTP JSON.
+
+
+Llama a Fleet MS (síncrono REST) para consultar camiones elegibles / tarifas por camión cuando asigna.
+
+
+Publica eventos asíncronos (Kafka): RutaGenerada, TramoAsignado, TramoIniciado, TramoFinalizado (los consume Orders MS y Fleet MS). Razonamiento: planificación y ejecución generan muchos eventos y conviene desacoplar.
+
+
+Para operaciones críticas (inicio/fin tramo desde app de transportista): REST sobre HTTPS (transportista -> API GW -> Routing MS) y luego el MS publica evento.
+
+
+
+Método
+Endpoint
+Descripción
+Autorización
+GET
+/rutas
+Listar rutas activas
+ADMIN / LOGÍSTICA
+GET
+/rutas/{id}
+Consultar detalle de una ruta
+ADMIN / LOGÍSTICA
+POST
+/rutas
+Crear una nueva ruta asociada a una solicitud
+LOGÍSTICA
+PUT
+/rutas/{id}
+Actualizar estado o información de la ruta
+LOGÍSTICA
+GET
+/rutas/{id}/tramos
+Listar tramos de una ruta
+LOGÍSTICA
+POST
+/rutas/{id}/tramos
+Agregar un tramo nuevo
+LOGÍSTICA
+PUT
+/tramos/{id}
+Actualizar tramo (costo real, hora fin, etc.)
+LOGÍSTICA
+GET
+/rutas/{id}/posición
+Obtener posición actual del camión (consulta a API de Google Maps)
+CLIENTE / LOGÍSTICA
+
+
+
+
+Reglas de negocio clave implementadas aquí
+Validación: un camión no puede exceder peso/volumen del contenedor (RN obligatoria).
+
+
+Cálculo de costos reales (suma: km * costo por km del camión + consumo * precio litro + estadía depósitos).
+
+
+
+3) MS Administración / Fleet & Master Data (Fleet MS) — Admin & maestros
+Propósito / responsabilidad
+ABM de Depósitos, Camiones, Tarifas, Parámetros globales (valor litro, cargo gestión por tramo, rangos por volumen/peso, costo estadía por depósito).
+
+
+Proveer datos para cálculo de estimaciones y asignaciones (camiones aptos, costos por km, consumos).
+
+
+Exponer listados de contenedores en depósitos (estado), camiones libres/ocupados (para interfaz Operador).
+
+
+Entidades / clases
+Depósito (id, nombre, dirección, coordenadas, costoEstadiaDiario)
+
+
+Camión (id, dominio, nombreTransportista, telefono, capacidadPeso, capacidadVolumen, disponibilidad, costoBaseKm, consumoPromedio)
+
+
+Tarifa (modelo elegido por el grupo — sugerencia: por rangos de volumen/peso o por tipo de camión)
+
+
+ParametroGlobal (valorLitro, cargoGestionPorTramo, etc.)
+
+
+DB: PostgreSQL propia (datos maestros). Justificación: datos maestros deben ser transaccionales y versionados/ auditables.
+Tecnologías / despliegue
+Java + Spring Boot, Docker. Admin UI (solo para Operador/Administrador roles). Swagger para endpoints ABM.
+
+
+Comunicación
+Expuesto por REST/HTTPS JSON para consultas internas (Logistics MS solicita camiones aptos, tarifas).
+
+
+Consumo de eventos Kafka para actualizar estados locales si es necesario (por ejemplo TramoIniciado -> poner camion como ocupado).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Método
+Endpoint
+Descripción
+Autorización
+GET
+/camiones
+Listar camiones disponibles
+ADMIN / LOGÍSTICA
+GET
+/camiones/{id}
+Consultar camión
+ADMIN / LOGÍSTICA
+POST
+/camiones
+Registrar nuevo camión
+ADMIN
+PUT
+/camiones/{id}
+Modificar estado o datos
+ADMIN
+GET
+/depósitos
+Listar depósitos
+ADMIN / LOGÍSTICA
+GET
+/depósitos/{id}
+Consultar depósito
+ADMIN / LOGÍSTICA
+POST
+/depósitos
+Registrar nuevo depósito
+ADMIN
+GET
+/tarifas
+Listar tarifas disponibles
+ADMIN / LOGÍSTICA
+GET
+/tarifas/{id}
+Consultar detalle de tarifa
+ADMIN / LOGÍSTICA
+POST
+/tarifas
+Crear nueva tarifa
+ADMIN
+PUT
+/tarifas/{id}
+Actualizar valor de tarifa
+ADMIN
+
+
+     📞COMUNICACIÓN ENTRE MICROSERVICIOS:
+
+Origen
+Destino
+Canal
+Propósito
+Pedidos
+Logística
+REST (JSON)
+Consultar estado de ruta y ubicación
+Logística
+Administración
+REST (JSON)
+Obtener datos de camiones, depósitos, tarifas
+Logística
+Google Maps API
+HTTPS (JSON)
+Obtener datos geográficos
+Todos
+Keycloak
+HTTPS (JWT)
+Autenticación y roles
+
+
+
+
+

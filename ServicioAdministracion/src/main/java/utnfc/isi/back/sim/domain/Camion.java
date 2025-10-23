@@ -40,6 +40,13 @@ public class Camion {
     @Column(name = "TRANSPORTISTA", length = 200)
     private String transportista;
 
+    @Column(name = "TELEFONO", length = 50)
+    private String telefono;
+
+    @Column(name = "DISPONIBLE")
+    @Builder.Default
+    private Boolean disponible = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_TARIFA")
     private Tarifa tarifa;
