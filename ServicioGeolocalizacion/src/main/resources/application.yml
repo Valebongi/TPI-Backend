@@ -1,0 +1,27 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: servicio-geolocalizacion
+
+# Configuración de Swagger/OpenAPI
+springdoc:
+  swagger-ui:
+    path: /doc/swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+# Google Maps API Configuration
+google:
+  maps:
+    api-key: AIzaSyDvVNH28G-H54CrvbqPcnXELyf6WTY202M
+    distance-matrix:
+      url: https://maps.googleapis.com/maps/api/distancematrix/json
+
+# Configuración de logs
+logging:
+  level:
+    root: INFO
+    utnfc.isi.back.sim: DEBUG
+    org.springframework.web.client: DEBUG

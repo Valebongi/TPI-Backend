@@ -1,0 +1,14 @@
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\AppMain.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\controller\ClienteController.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\controller\ContenedorController.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\controller\HomeController.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\controller\SolicitudController.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\domain\Cliente.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\domain\Contenedor.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\domain\Solicitud.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\repository\ClienteRepository.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\repository\ContenedorRepository.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\repository\SolicitudRepository.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\service\ClienteService.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\service\ContenedorService.java
+C:\Codigo\TPI-Backend\TPI\ServicioPedidos\src\main\java\utnfc\isi\back\sim\service\SolicitudService.java
