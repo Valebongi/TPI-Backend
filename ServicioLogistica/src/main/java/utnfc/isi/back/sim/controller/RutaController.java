@@ -1,7 +1,6 @@
 package utnfc.isi.back.sim.controller;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,26 +18,30 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/rutas")
-@RequiredArgsConstructor
-@Slf4j
 @CrossOrigin(origins = "*")
 public class RutaController {
     
     private final RutaService rutaService;
     private final TramoService tramoService;
+
+    @Autowired
+    public RutaController(RutaService rutaService, TramoService tramoService) {
+        this.rutaService = rutaService;
+        this.tramoService = tramoService;
+    }
     
     /**
      * GET /rutas - Listar rutas activas
      */
     @GetMapping
     public ResponseEntity<List<Ruta>> listarRutas() {
-        log.info("GET /api/rutas - Listando rutas activas");
+        // Log removed for Docker compatibility
         
         try {
             List<Ruta> rutas = rutaService.findRutasActivas();
             return ResponseEntity.ok(rutas);
         } catch (Exception e) {
-            log.error("Error al listar rutas: {}", e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al listar rutas
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -48,14 +51,14 @@ public class RutaController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Ruta> consultarRuta(@PathVariable Long id) {
-        log.info("GET /api/rutas/{} - Consultando ruta por ID", id);
+        // Log removed for Docker compatibility
         
         try {
             return rutaService.findById(id)
                     .map(ruta -> ResponseEntity.ok(ruta))
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            log.error("Error al consultar ruta ID {}: {}", id, e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al consultar ruta
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -65,16 +68,16 @@ public class RutaController {
      */
     @PostMapping
     public ResponseEntity<Ruta> crearRuta(@Valid @RequestBody Ruta ruta) {
-        log.info("POST /api/rutas - Creando nueva ruta para solicitud ID: {}", ruta.getSolicitudId());
+        // Log removed for Docker compatibility: Creando nueva ruta
         
         try {
             Ruta rutaCreada = rutaService.save(ruta);
             return ResponseEntity.status(HttpStatus.CREATED).body(rutaCreada);
         } catch (IllegalArgumentException e) {
-            log.warn("Error de validación al crear ruta: {}", e.getMessage());
+            // Log removed for Docker compatibility: Error de validación al crear ruta
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            log.error("Error al crear ruta: {}", e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al crear ruta
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -84,16 +87,16 @@ public class RutaController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Ruta> actualizarRuta(@PathVariable Long id, @Valid @RequestBody Ruta ruta) {
-        log.info("PUT /api/rutas/{} - Actualizando ruta", id);
+        // Log removed for Docker compatibility
         
         try {
             Ruta rutaActualizada = rutaService.update(id, ruta);
             return ResponseEntity.ok(rutaActualizada);
         } catch (RuntimeException e) {
-            log.warn("Error al actualizar ruta ID {}: {}", id, e.getMessage());
+            // Log removed for Docker compatibility: Error al actualizar ruta
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            log.error("Error al actualizar ruta ID {}: {}", id, e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al actualizar ruta
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -103,7 +106,7 @@ public class RutaController {
      */
     @GetMapping("/{id}/tramos")
     public ResponseEntity<List<Tramo>> listarTramos(@PathVariable Long id) {
-        log.info("GET /api/rutas/{}/tramos - Listando tramos de la ruta", id);
+        // Log removed for Docker compatibility
         
         try {
             // Verificar que la ruta exista
@@ -114,7 +117,7 @@ public class RutaController {
             List<Tramo> tramos = tramoService.findByRutaId(id);
             return ResponseEntity.ok(tramos);
         } catch (Exception e) {
-            log.error("Error al listar tramos de ruta ID {}: {}", id, e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al listar tramos de ruta
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -124,7 +127,7 @@ public class RutaController {
      */
     @PostMapping("/{id}/tramos")
     public ResponseEntity<Tramo> agregarTramo(@PathVariable Long id, @Valid @RequestBody Tramo tramo) {
-        log.info("POST /api/rutas/{}/tramos - Agregando tramo a la ruta", id);
+        // Log removed for Docker compatibility
         
         try {
             // Verificar que la ruta exista
@@ -140,10 +143,10 @@ public class RutaController {
                     })
                     .orElse(ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
-            log.warn("Error de validación al agregar tramo: {}", e.getMessage());
+            // Log removed for Docker compatibility: Error de validación al agregar tramo
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            log.error("Error al agregar tramo a ruta ID {}: {}", id, e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al agregar tramo a ruta
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -153,16 +156,16 @@ public class RutaController {
      */
     @PutMapping("/{id}/estado")
     public ResponseEntity<Ruta> actualizarEstadoRuta(@PathVariable Long id, @RequestParam Ruta.EstadoRuta estado) {
-        log.info("PUT /api/rutas/{}/estado - Actualizando estado a: {}", id, estado);
+        // Log removed for Docker compatibility
         
         try {
             Ruta rutaActualizada = rutaService.actualizarEstado(id, estado);
             return ResponseEntity.ok(rutaActualizada);
         } catch (RuntimeException e) {
-            log.warn("Error al actualizar estado de ruta ID {}: {}", id, e.getMessage());
+            // Log removed for Docker compatibility: Error al actualizar estado de ruta
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            log.error("Error al actualizar estado de ruta ID {}: {}", id, e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al actualizar estado de ruta
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -172,14 +175,14 @@ public class RutaController {
      */
     @GetMapping("/solicitud/{solicitudId}")
     public ResponseEntity<Ruta> consultarRutaPorSolicitud(@PathVariable Long solicitudId) {
-        log.info("GET /api/rutas/solicitud/{} - Consultando ruta por solicitud ID", solicitudId);
+        // Log removed for Docker compatibility
         
         try {
             return rutaService.findBySolicitudId(solicitudId)
                     .map(ruta -> ResponseEntity.ok(ruta))
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            log.error("Error al consultar ruta por solicitud ID {}: {}", solicitudId, e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al consultar ruta por solicitud
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -189,16 +192,16 @@ public class RutaController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarRuta(@PathVariable Long id) {
-        log.info("DELETE /api/rutas/{} - Eliminando ruta", id);
+        // Log removed for Docker compatibility
         
         try {
             rutaService.deleteById(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            log.warn("Error al eliminar ruta ID {}: {}", id, e.getMessage());
+            // Log removed for Docker compatibility: Error al eliminar ruta
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            log.error("Error al eliminar ruta ID {}: {}", id, e.getMessage(), e);
+            // Log removed for Docker compatibility: Error al eliminar ruta
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

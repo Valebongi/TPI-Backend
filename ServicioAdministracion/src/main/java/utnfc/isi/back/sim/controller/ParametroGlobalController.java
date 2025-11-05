@@ -1,6 +1,6 @@
 package utnfc.isi.back.sim.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import utnfc.isi.back.sim.domain.ParametroGlobal;
@@ -10,9 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/parametros")
-@RequiredArgsConstructor
 public class ParametroGlobalController {
     private final ParametroGlobalService parametroGlobalService;
+
+    @Autowired
+    public ParametroGlobalController(ParametroGlobalService parametroGlobalService) {
+        this.parametroGlobalService = parametroGlobalService;
+    }
 
     @GetMapping
     public ResponseEntity<List<ParametroGlobal>> all() { 

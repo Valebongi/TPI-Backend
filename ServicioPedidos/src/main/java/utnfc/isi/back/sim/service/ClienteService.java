@@ -1,7 +1,6 @@
 package utnfc.isi.back.sim.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utnfc.isi.back.sim.domain.Cliente;
@@ -11,51 +10,54 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class ClienteService {
     
     private final ClienteRepository clienteRepository;
+
+    @Autowired
+    public ClienteService(ClienteRepository clienteRepository) {
+        this.clienteRepository = clienteRepository;
+    }
     
     @Transactional(readOnly = true)
     public List<Cliente> findAll() {
-        log.debug("Buscando todos los clientes");
+        // Log removed for Docker compatibility
         return clienteRepository.findAll();
     }
     
     @Transactional(readOnly = true)
     public List<Cliente> findAllActivos() {
-        log.debug("Buscando todos los clientes activos");
+        // Log removed for Docker compatibility
         return clienteRepository.findByActivoTrue();
     }
     
     @Transactional(readOnly = true)
     public Optional<Cliente> findById(Long id) {
-        log.debug("Buscando cliente por ID: {}", id);
+        // Log removed for Docker compatibility
         return clienteRepository.findById(id);
     }
     
     @Transactional(readOnly = true)
     public Optional<Cliente> findByEmail(String email) {
-        log.debug("Buscando cliente por email: {}", email);
+        // Log removed for Docker compatibility
         return clienteRepository.findByEmail(email);
     }
     
     @Transactional(readOnly = true)
     public Optional<Cliente> findByKeycloakId(String keycloakId) {
-        log.debug("Buscando cliente por Keycloak ID: {}", keycloakId);
+        // Log removed for Docker compatibility
         return clienteRepository.findByKeycloakId(keycloakId);
     }
     
     @Transactional(readOnly = true)
     public List<Cliente> findByFiltro(String filtro) {
-        log.debug("Buscando clientes por filtro: {}", filtro);
+        // Log removed for Docker compatibility
         return clienteRepository.findByFiltro(filtro);
     }
     
     public Cliente save(Cliente cliente) {
-        log.debug("Guardando cliente: {}", cliente.getEmail());
+        // Log removed for Docker compatibility
         
         // Validar que el email no esté duplicado
         if (cliente.getId() == null && clienteRepository.existsByEmail(cliente.getEmail())) {
@@ -66,7 +68,7 @@ public class ClienteService {
     }
     
     public Cliente update(Long id, Cliente clienteActualizado) {
-        log.debug("Actualizando cliente con ID: {}", id);
+        // Log removed for Docker compatibility
         
         return clienteRepository.findById(id)
                 .map(cliente -> {
@@ -90,7 +92,7 @@ public class ClienteService {
     }
     
     public void deleteById(Long id) {
-        log.debug("Eliminando cliente con ID: {}", id);
+        // Log removed for Docker compatibility
         
         if (!clienteRepository.existsById(id)) {
             throw new IllegalArgumentException("Cliente no encontrado con ID: " + id);
@@ -100,7 +102,7 @@ public class ClienteService {
     }
     
     public void desactivar(Long id) {
-        log.debug("Desactivando cliente con ID: {}", id);
+        // Log removed for Docker compatibility
         
         clienteRepository.findById(id)
                 .map(cliente -> {

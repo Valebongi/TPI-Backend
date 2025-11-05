@@ -18,7 +18,7 @@ public class HomeController {
     
     @GetMapping
     public ResponseEntity<Map<String, Object>> home() {
-        log.info("GET / - Página principal del Servicio de Pedidos");
+        // Log removed for Docker compatibility
         
         List<Map<String, Object>> endpoints = new ArrayList<>();
         
@@ -232,7 +232,7 @@ public class HomeController {
     
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
-        log.info("GET /health - Health check");
+        // Log removed for Docker compatibility
         
         Map<String, String> response = Map.of(
                 "status", "UP",

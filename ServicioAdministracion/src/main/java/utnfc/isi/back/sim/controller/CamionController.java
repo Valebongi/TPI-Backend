@@ -1,6 +1,6 @@
 package utnfc.isi.back.sim.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import utnfc.isi.back.sim.domain.Camion;
@@ -10,9 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/camiones")
-@RequiredArgsConstructor
 public class CamionController {
     private final CamionService camionService;
+
+    @Autowired
+    public CamionController(CamionService camionService) {
+        this.camionService = camionService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Camion>> all() {
@@ -20,7 +24,7 @@ public class CamionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Camion> get(@PathVariable Integer id) {
+    public ResponseEntity<Camion> get(@PathVariable Long id) {
         return camionService.findById(id).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -31,7 +35,7 @@ public class CamionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         camionService.deleteById(id);
         return ResponseEntity.noContent().build();
     }

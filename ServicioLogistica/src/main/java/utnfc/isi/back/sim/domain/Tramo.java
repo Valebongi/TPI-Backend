@@ -2,9 +2,6 @@ package utnfc.isi.back.sim.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -14,9 +11,6 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "tramos")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Tramo {
     
     @Id
@@ -75,6 +69,66 @@ public class Tramo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ruta_id", nullable = false)
     private Ruta ruta;
+    
+    // Constructors
+    public Tramo() {}
+    
+    public Tramo(String origenCoordenadas, String destinoCoordenadas, String origenDescripcion, 
+                 String destinoDescripcion, TipoTramo tipo, EstadoTramo estado, Double costoAproximado,
+                 Double costoReal, Double distanciaKm, Integer tiempoEstimadoMinutos, Integer tiempoRealMinutos,
+                 LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, Long camionId, Ruta ruta) {
+        this.origenCoordenadas = origenCoordenadas;
+        this.destinoCoordenadas = destinoCoordenadas;
+        this.origenDescripcion = origenDescripcion;
+        this.destinoDescripcion = destinoDescripcion;
+        this.tipo = tipo;
+        this.estado = estado;
+        this.costoAproximado = costoAproximado;
+        this.costoReal = costoReal;
+        this.distanciaKm = distanciaKm;
+        this.tiempoEstimadoMinutos = tiempoEstimadoMinutos;
+        this.tiempoRealMinutos = tiempoRealMinutos;
+        this.fechaHoraInicio = fechaHoraInicio;
+        this.fechaHoraFin = fechaHoraFin;
+        this.camionId = camionId;
+        this.ruta = ruta;
+    }
+
+    // Getters
+    public Long getId() { return id; }
+    public String getOrigenCoordenadas() { return origenCoordenadas; }
+    public String getDestinoCoordenadas() { return destinoCoordenadas; }
+    public String getOrigenDescripcion() { return origenDescripcion; }
+    public String getDestinoDescripcion() { return destinoDescripcion; }
+    public TipoTramo getTipo() { return tipo; }
+    public EstadoTramo getEstado() { return estado; }
+    public Double getCostoAproximado() { return costoAproximado; }
+    public Double getCostoReal() { return costoReal; }
+    public Double getDistanciaKm() { return distanciaKm; }
+    public Integer getTiempoEstimadoMinutos() { return tiempoEstimadoMinutos; }
+    public Integer getTiempoRealMinutos() { return tiempoRealMinutos; }
+    public LocalDateTime getFechaHoraInicio() { return fechaHoraInicio; }
+    public LocalDateTime getFechaHoraFin() { return fechaHoraFin; }
+    public Long getCamionId() { return camionId; }
+    public Ruta getRuta() { return ruta; }
+
+    // Setters
+    public void setId(Long id) { this.id = id; }
+    public void setOrigenCoordenadas(String origenCoordenadas) { this.origenCoordenadas = origenCoordenadas; }
+    public void setDestinoCoordenadas(String destinoCoordenadas) { this.destinoCoordenadas = destinoCoordenadas; }
+    public void setOrigenDescripcion(String origenDescripcion) { this.origenDescripcion = origenDescripcion; }
+    public void setDestinoDescripcion(String destinoDescripcion) { this.destinoDescripcion = destinoDescripcion; }
+    public void setTipo(TipoTramo tipo) { this.tipo = tipo; }
+    public void setEstado(EstadoTramo estado) { this.estado = estado; }
+    public void setCostoAproximado(Double costoAproximado) { this.costoAproximado = costoAproximado; }
+    public void setCostoReal(Double costoReal) { this.costoReal = costoReal; }
+    public void setDistanciaKm(Double distanciaKm) { this.distanciaKm = distanciaKm; }
+    public void setTiempoEstimadoMinutos(Integer tiempoEstimadoMinutos) { this.tiempoEstimadoMinutos = tiempoEstimadoMinutos; }
+    public void setTiempoRealMinutos(Integer tiempoRealMinutos) { this.tiempoRealMinutos = tiempoRealMinutos; }
+    public void setFechaHoraInicio(LocalDateTime fechaHoraInicio) { this.fechaHoraInicio = fechaHoraInicio; }
+    public void setFechaHoraFin(LocalDateTime fechaHoraFin) { this.fechaHoraFin = fechaHoraFin; }
+    public void setCamionId(Long camionId) { this.camionId = camionId; }
+    public void setRuta(Ruta ruta) { this.ruta = ruta; }
     
     /**
      * Enumeration para los tipos de tramo

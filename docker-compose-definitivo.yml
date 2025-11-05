@@ -1,0 +1,108 @@
+services:
+  # Base de datos PostgreSQL única con múltiples bases separadas
+  postgres:
+    image: postgres:15-alpine
+    container_name: tpi-postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: tpi_user
+      POSTGRES_PASSWORD: tpi_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+      - ./database/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # API Gateway - Puerto de entrada único
+  api-gateway:
+    build: 
+      context: ./ApiGateway
+    container_name: tpi-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - servicio-administracion
+      - servicio-geolocalizacion
+      - servicio-logistica
+      - servicio-pedidos
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Servicio de Geolocalización - Sin base de datos
+  servicio-geolocalizacion:
+    build: 
+      context: ./ServicioGeolocalizacion
+    container_name: tpi-servicio-geolocalizacion
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Servicio de Administración
+  servicio-administracion:
+    build: 
+      context: ./ServicioAdministracion
+    container_name: tpi-servicio-administracion
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tpi_backend_administracion_db
+      - SPRING_DATASOURCE_USERNAME=tpi_user
+      - SPRING_DATASOURCE_PASSWORD=tpi_pass
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Servicio de Logística
+  servicio-logistica:
+    build: 
+      context: ./ServicioLogistica
+    container_name: tpi-servicio-logistica
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tpi_backend_logistica_db
+      - SPRING_DATASOURCE_USERNAME=tpi_user
+      - SPRING_DATASOURCE_PASSWORD=tpi_pass
+    depends_on:
+      - postgres
+      - servicio-administracion
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Servicio de Pedidos
+  servicio-pedidos:
+    build: 
+      context: ./ServicioPedidos
+    container_name: tpi-servicio-pedidos
+    ports:
+      - "8084:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tpi_backend_pedidos_db
+      - SPRING_DATASOURCE_USERNAME=tpi_user
+      - SPRING_DATASOURCE_PASSWORD=tpi_pass
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    restart: unless-stopped
+
+# Red backend como especifica el apunte
+networks:
+  backend:
+    driver: bridge

@@ -1,0 +1,32 @@
+# Configuración para Docker Profile
+server:
+  port: 8080
+
+spring:
+  application:
+    name: servicio-logistica
+  datasource:
+    url: jdbc:postgresql://postgres:5432/tpi_backend_logistica_db
+    username: tpi_user
+    password: tpi_pass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Configuración de Swagger/OpenAPI
+springdoc:
+  swagger-ui:
+    path: /doc/swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+# Configuración de logs
+logging:
+  level:
+    utnfc.isi.back.sim: DEBUG
+    org.hibernate.SQL: DEBUG

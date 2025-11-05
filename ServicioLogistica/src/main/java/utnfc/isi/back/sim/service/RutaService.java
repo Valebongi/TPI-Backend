@@ -1,7 +1,6 @@
 package utnfc.isi.back.sim.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utnfc.isi.back.sim.domain.Ruta;
@@ -16,20 +15,24 @@ import java.util.Optional;
  * Contiene la lógica de negocio para operaciones con rutas
  */
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class RutaService {
     
     private final RutaRepository rutaRepository;
     private final TramoService tramoService;
+
+    @Autowired
+    public RutaService(RutaRepository rutaRepository, TramoService tramoService) {
+        this.rutaRepository = rutaRepository;
+        this.tramoService = tramoService;
+    }
     
     /**
      * Obtiene todas las rutas
      */
     @Transactional(readOnly = true)
     public List<Ruta> findAll() {
-        log.info("Obteniendo todas las rutas");
+        // Log removed for Docker compatibility
         return rutaRepository.findAll();
     }
     
@@ -38,7 +41,7 @@ public class RutaService {
      */
     @Transactional(readOnly = true)
     public Optional<Ruta> findById(Long id) {
-        log.info("Buscando ruta con ID: {}", id);
+        // Log removed for Docker compatibility
         return rutaRepository.findById(id);
     }
     
@@ -47,7 +50,7 @@ public class RutaService {
      */
     @Transactional(readOnly = true)
     public Optional<Ruta> findBySolicitudId(Long solicitudId) {
-        log.info("Buscando ruta para solicitud ID: {}", solicitudId);
+        // Log removed for Docker compatibility
         return rutaRepository.findBySolicitudId(solicitudId);
     }
     
@@ -56,7 +59,7 @@ public class RutaService {
      */
     @Transactional(readOnly = true)
     public List<Ruta> findByEstado(Ruta.EstadoRuta estado) {
-        log.info("Buscando rutas con estado: {}", estado);
+        // Log removed for Docker compatibility
         return rutaRepository.findByEstado(estado);
     }
     
@@ -65,7 +68,7 @@ public class RutaService {
      */
     @Transactional(readOnly = true)
     public List<Ruta> findRutasActivas() {
-        log.info("Obteniendo rutas activas");
+        // Log removed for Docker compatibility
         return rutaRepository.findRutasActivas();
     }
     
@@ -73,7 +76,7 @@ public class RutaService {
      * Crea una nueva ruta
      */
     public Ruta save(Ruta ruta) {
-        log.info("Creando nueva ruta para solicitud ID: {}", ruta.getSolicitudId());
+        // Log removed for Docker compatibility
         
         // Validar que no exista ya una ruta para esta solicitud
         if (ruta.getSolicitudId() != null && rutaRepository.findBySolicitudId(ruta.getSolicitudId()).isPresent()) {
@@ -86,7 +89,7 @@ public class RutaService {
         }
         
         Ruta rutaGuardada = rutaRepository.save(ruta);
-        log.info("Ruta creada con ID: {}", rutaGuardada.getId());
+        // Log removed for Docker compatibility
         
         return rutaGuardada;
     }
@@ -95,7 +98,7 @@ public class RutaService {
      * Actualiza una ruta existente
      */
     public Ruta update(Long id, Ruta rutaActualizada) {
-        log.info("Actualizando ruta con ID: {}", id);
+        // Log removed for Docker compatibility
         
         return rutaRepository.findById(id)
                 .map(rutaExistente -> {
@@ -113,7 +116,7 @@ public class RutaService {
      * Elimina una ruta
      */
     public void deleteById(Long id) {
-        log.info("Eliminando ruta con ID: {}", id);
+        // Log removed for Docker compatibility
         
         if (!rutaRepository.existsById(id)) {
             throw new RuntimeException("Ruta no encontrada con ID: " + id);
@@ -126,7 +129,7 @@ public class RutaService {
      * Calcula el costo total de una ruta basándose en sus tramos
      */
     public void calcularCostoTotal(Long rutaId) {
-        log.info("Calculando costo total para ruta ID: {}", rutaId);
+        // Log removed for Docker compatibility
         
         rutaRepository.findById(rutaId).ifPresent(ruta -> {
             List<Tramo> tramos = tramoService.findByRutaId(rutaId);
@@ -157,7 +160,7 @@ public class RutaService {
      * Actualiza el estado de una ruta
      */
     public Ruta actualizarEstado(Long id, Ruta.EstadoRuta nuevoEstado) {
-        log.info("Actualizando estado de ruta ID: {} a {}", id, nuevoEstado);
+        // Log removed for Docker compatibility
         
         return rutaRepository.findById(id)
                 .map(ruta -> {

@@ -1,27 +1,78 @@
 package utnfc.isi.back.sim.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
+import java.math.BigDecimal;
 
 @Entity
-@Table(name = "TARIFAS")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Table(name = "tarifas")
 public class Tarifa {
     @Id
-    @SequenceGenerator(name = "seq_tarifa", sequenceName = "SEQ_TARIFA_ID", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_tarifa")
-    @Column(name = "ID_TARIFA")
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_tarifa")
+    private Long id;
 
-    @Column(name = "NOMBRE", nullable = false, length = 200)
+    @Column(name = "nombre", nullable = false, length = 200)
     private String nombre;
 
-    @Column(name = "DESCRIPCION", length = 2048)
+    @Column(name = "descripcion", length = 2048)
     private String descripcion;
 
-    @Column(name = "VALOR_BASE", precision = 10, scale = 2)
-    private java.math.BigDecimal valorBase;
+    @Column(name = "valor_base", precision = 10, scale = 2)
+    private BigDecimal valorBase;
 
-    @Column(name = "TIPO_CALCULO", length = 50)
+    @Column(name = "tipo_calculo", length = 50)
     private String tipoCalculo;
+
+    // Constructor por defecto
+    public Tarifa() {}
+
+    // Constructor con parámetros
+    public Tarifa(String nombre, String descripcion, BigDecimal valorBase, String tipoCalculo) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.valorBase = valorBase;
+        this.tipoCalculo = tipoCalculo;
+    }
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public BigDecimal getValorBase() {
+        return valorBase;
+    }
+
+    public String getTipoCalculo() {
+        return tipoCalculo;
+    }
+
+    // Setters
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public void setValorBase(BigDecimal valorBase) {
+        this.valorBase = valorBase;
+    }
+
+    public void setTipoCalculo(String tipoCalculo) {
+        this.tipoCalculo = tipoCalculo;
+    }
 }

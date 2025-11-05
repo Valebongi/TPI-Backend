@@ -2,14 +2,12 @@ package utnfc.isi.back.sim.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "SOLICITUDES")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Solicitud {
     
     @Id
@@ -19,8 +17,7 @@ public class Solicitud {
     private Long id;
 
     @Column(name = "NUMERO", nullable = false, unique = true, length = 50)
-    @Builder.Default
-    private String numero = generateSolicitudNumber();
+    private String numero;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_CONTENEDOR", nullable = false)
@@ -45,12 +42,10 @@ public class Solicitud {
     private Integer tiempoRealHoras;
 
     @Column(name = "ESTADO", nullable = false, length = 50)
-    @Builder.Default
-    private String estado = "BORRADOR"; // BORRADOR, PROGRAMADA, EN_TRANSITO, ENTREGADA, CANCELADA
+    private String estado; // BORRADOR, PROGRAMADA, EN_TRANSITO, ENTREGADA, CANCELADA
 
     @Column(name = "FECHA_CREACION", nullable = false)
-    @Builder.Default
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    private LocalDateTime fechaCreacion;
 
     @Column(name = "FECHA_PROGRAMACION")
     private LocalDateTime fechaProgramacion;
@@ -66,6 +61,114 @@ public class Solicitud {
 
     @Column(name = "RUTA_ID")
     private Long rutaId; // ID de la ruta en el servicio de logística
+
+    // Constructors
+    public Solicitud() {
+        this.numero = generateSolicitudNumber();
+        this.estado = "BORRADOR";
+        this.fechaCreacion = LocalDateTime.now();
+    }
+
+    public Solicitud(Long id, String numero, Contenedor contenedor, Cliente cliente, 
+                    BigDecimal costoEstimado, Integer tiempoEstimadoHoras, BigDecimal costoFinal,
+                    Integer tiempoRealHoras, String estado, LocalDateTime fechaCreacion,
+                    LocalDateTime fechaProgramacion, LocalDateTime fechaInicioTransito,
+                    LocalDateTime fechaEntrega, String observaciones, Long rutaId) {
+        this.id = id;
+        this.numero = numero;
+        this.contenedor = contenedor;
+        this.cliente = cliente;
+        this.costoEstimado = costoEstimado;
+        this.tiempoEstimadoHoras = tiempoEstimadoHoras;
+        this.costoFinal = costoFinal;
+        this.tiempoRealHoras = tiempoRealHoras;
+        this.estado = estado;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaProgramacion = fechaProgramacion;
+        this.fechaInicioTransito = fechaInicioTransito;
+        this.fechaEntrega = fechaEntrega;
+        this.observaciones = observaciones;
+        this.rutaId = rutaId;
+    }
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNumero() { return numero; }
+    public void setNumero(String numero) { this.numero = numero; }
+
+    public Contenedor getContenedor() { return contenedor; }
+    public void setContenedor(Contenedor contenedor) { this.contenedor = contenedor; }
+
+    public Cliente getCliente() { return cliente; }
+    public void setCliente(Cliente cliente) { this.cliente = cliente; }
+
+    public BigDecimal getCostoEstimado() { return costoEstimado; }
+    public void setCostoEstimado(BigDecimal costoEstimado) { this.costoEstimado = costoEstimado; }
+
+    public Integer getTiempoEstimadoHoras() { return tiempoEstimadoHoras; }
+    public void setTiempoEstimadoHoras(Integer tiempoEstimadoHoras) { this.tiempoEstimadoHoras = tiempoEstimadoHoras; }
+
+    public BigDecimal getCostoFinal() { return costoFinal; }
+    public void setCostoFinal(BigDecimal costoFinal) { this.costoFinal = costoFinal; }
+
+    public Integer getTiempoRealHoras() { return tiempoRealHoras; }
+    public void setTiempoRealHoras(Integer tiempoRealHoras) { this.tiempoRealHoras = tiempoRealHoras; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+
+    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    public LocalDateTime getFechaProgramacion() { return fechaProgramacion; }
+    public void setFechaProgramacion(LocalDateTime fechaProgramacion) { this.fechaProgramacion = fechaProgramacion; }
+
+    public LocalDateTime getFechaInicioTransito() { return fechaInicioTransito; }
+    public void setFechaInicioTransito(LocalDateTime fechaInicioTransito) { this.fechaInicioTransito = fechaInicioTransito; }
+
+    public LocalDateTime getFechaEntrega() { return fechaEntrega; }
+    public void setFechaEntrega(LocalDateTime fechaEntrega) { this.fechaEntrega = fechaEntrega; }
+
+    public String getObservaciones() { return observaciones; }
+    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+
+    public Long getRutaId() { return rutaId; }
+    public void setRutaId(Long rutaId) { this.rutaId = rutaId; }
+
+    // Builder pattern
+    public static SolicitudBuilder builder() {
+        return new SolicitudBuilder();
+    }
+
+    public static class SolicitudBuilder {
+        private Solicitud solicitud = new Solicitud();
+
+        public SolicitudBuilder contenedor(Contenedor contenedor) {
+            solicitud.setContenedor(contenedor);
+            return this;
+        }
+
+        public SolicitudBuilder cliente(Cliente cliente) {
+            solicitud.setCliente(cliente);
+            return this;
+        }
+
+        public SolicitudBuilder estado(String estado) {
+            solicitud.setEstado(estado);
+            return this;
+        }
+
+        public SolicitudBuilder fechaCreacion(LocalDateTime fechaCreacion) {
+            solicitud.setFechaCreacion(fechaCreacion);
+            return this;
+        }
+
+        public Solicitud build() {
+            return solicitud;
+        }
+    }
 
     private static String generateSolicitudNumber() {
         return "SOL-" + System.currentTimeMillis();

@@ -1,7 +1,6 @@
 package utnfc.isi.back.sim.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utnfc.isi.back.sim.domain.Tramo;
@@ -16,19 +15,22 @@ import java.util.Optional;
  * Contiene la lógica de negocio para operaciones con tramos
  */
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class TramoService {
     
     private final TramoRepository tramoRepository;
+
+    @Autowired
+    public TramoService(TramoRepository tramoRepository) {
+        this.tramoRepository = tramoRepository;
+    }
     
     /**
      * Obtiene todos los tramos
      */
     @Transactional(readOnly = true)
     public List<Tramo> findAll() {
-        log.info("Obteniendo todos los tramos");
+        // Log removed for Docker compatibility
         return tramoRepository.findAll();
     }
     
@@ -37,7 +39,7 @@ public class TramoService {
      */
     @Transactional(readOnly = true)
     public Optional<Tramo> findById(Long id) {
-        log.info("Buscando tramo con ID: {}", id);
+        // Log removed for Docker compatibility
         return tramoRepository.findById(id);
     }
     
@@ -46,7 +48,7 @@ public class TramoService {
      */
     @Transactional(readOnly = true)
     public List<Tramo> findByRutaId(Long rutaId) {
-        log.info("Buscando tramos para ruta ID: {}", rutaId);
+        // Log removed for Docker compatibility
         return tramoRepository.findByRutaIdOrderById(rutaId);
     }
     
@@ -55,7 +57,7 @@ public class TramoService {
      */
     @Transactional(readOnly = true)
     public List<Tramo> findByEstado(Tramo.EstadoTramo estado) {
-        log.info("Buscando tramos con estado: {}", estado);
+        // Log removed for Docker compatibility
         return tramoRepository.findByEstado(estado);
     }
     
@@ -64,7 +66,7 @@ public class TramoService {
      */
     @Transactional(readOnly = true)
     public List<Tramo> findByCamionId(Long camionId) {
-        log.info("Buscando tramos para camión ID: {}", camionId);
+        // Log removed for Docker compatibility
         return tramoRepository.findByCamionId(camionId);
     }
     
@@ -73,7 +75,7 @@ public class TramoService {
      */
     @Transactional(readOnly = true)
     public List<Tramo> findTramosPendientesDeAsignacion() {
-        log.info("Obteniendo tramos pendientes de asignación");
+        // Log removed for Docker compatibility
         return tramoRepository.findTramosPendientesDeAsignacion();
     }
     
@@ -81,7 +83,7 @@ public class TramoService {
      * Crea un nuevo tramo
      */
     public Tramo save(Tramo tramo) {
-        log.info("Creando nuevo tramo para ruta ID: {}", tramo.getRuta() != null ? tramo.getRuta().getId() : "N/A");
+        // Log removed for Docker compatibility
         
         // Validaciones básicas
         if (tramo.getOrigenCoordenadas() == null || tramo.getOrigenCoordenadas().trim().isEmpty()) {
@@ -93,7 +95,7 @@ public class TramoService {
         }
         
         Tramo tramoGuardado = tramoRepository.save(tramo);
-        log.info("Tramo creado con ID: {}", tramoGuardado.getId());
+        // Log removed for Docker compatibility
         
         return tramoGuardado;
     }
@@ -102,7 +104,7 @@ public class TramoService {
      * Actualiza un tramo existente
      */
     public Tramo update(Long id, Tramo tramoActualizado) {
-        log.info("Actualizando tramo con ID: {}", id);
+        // Log removed for Docker compatibility
         
         return tramoRepository.findById(id)
                 .map(tramoExistente -> {
@@ -128,7 +130,7 @@ public class TramoService {
      * Elimina un tramo
      */
     public void deleteById(Long id) {
-        log.info("Eliminando tramo con ID: {}", id);
+        // Log removed for Docker compatibility
         
         if (!tramoRepository.existsById(id)) {
             throw new RuntimeException("Tramo no encontrado con ID: " + id);
@@ -141,7 +143,7 @@ public class TramoService {
      * Asigna un tramo a un camión
      */
     public Tramo asignarCamion(Long tramoId, Long camionId) {
-        log.info("Asignando tramo ID: {} al camión ID: {}", tramoId, camionId);
+        // Log removed for Docker compatibility
         
         return tramoRepository.findById(tramoId)
                 .map(tramo -> {
@@ -156,7 +158,7 @@ public class TramoService {
      * Inicia un tramo (transportista marca inicio)
      */
     public Tramo iniciarTramo(Long tramoId) {
-        log.info("Iniciando tramo ID: {}", tramoId);
+        // Log removed for Docker compatibility
         
         return tramoRepository.findById(tramoId)
                 .map(tramo -> {
@@ -175,7 +177,7 @@ public class TramoService {
      * Finaliza un tramo (transportista marca fin)
      */
     public Tramo finalizarTramo(Long tramoId, Double costoReal) {
-        log.info("Finalizando tramo ID: {} con costo real: {}", tramoId, costoReal);
+        // Log removed for Docker compatibility
         
         return tramoRepository.findById(tramoId)
                 .map(tramo -> {
@@ -203,7 +205,7 @@ public class TramoService {
      * Actualiza el estado de un tramo
      */
     public Tramo actualizarEstado(Long id, Tramo.EstadoTramo nuevoEstado) {
-        log.info("Actualizando estado de tramo ID: {} a {}", id, nuevoEstado);
+        // Log removed for Docker compatibility
         
         return tramoRepository.findById(id)
                 .map(tramo -> {

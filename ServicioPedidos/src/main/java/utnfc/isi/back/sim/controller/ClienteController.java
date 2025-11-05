@@ -1,8 +1,7 @@
 package utnfc.isi.back.sim.controller;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,18 +12,21 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/clientes")
-@RequiredArgsConstructor
-@Slf4j
 public class ClienteController {
     
     private final ClienteService clienteService;
+
+    @Autowired
+    public ClienteController(ClienteService clienteService) {
+        this.clienteService = clienteService;
+    }
     
     @GetMapping
     public ResponseEntity<List<Cliente>> getAllClientes(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false, defaultValue = "false") boolean soloActivos) {
         
-        log.info("GET /clientes - filtro: {}, soloActivos: {}", filtro, soloActivos);
+        // Log removed for Docker compatibility
         
         List<Cliente> clientes;
         
@@ -41,7 +43,7 @@ public class ClienteController {
     
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> getClienteById(@PathVariable Long id) {
-        log.info("GET /clientes/{}", id);
+        // Log removed for Docker compatibility
         
         return clienteService.findById(id)
                 .map(cliente -> ResponseEntity.ok(cliente))
@@ -50,7 +52,7 @@ public class ClienteController {
     
     @GetMapping("/email/{email}")
     public ResponseEntity<Cliente> getClienteByEmail(@PathVariable String email) {
-        log.info("GET /clientes/email/{}", email);
+        // Log removed for Docker compatibility
         
         return clienteService.findByEmail(email)
                 .map(cliente -> ResponseEntity.ok(cliente))
@@ -59,52 +61,52 @@ public class ClienteController {
     
     @PostMapping
     public ResponseEntity<Cliente> createCliente(@Valid @RequestBody Cliente cliente) {
-        log.info("POST /clientes - {}", cliente.getEmail());
+        // Log removed for Docker compatibility
         
         try {
             Cliente nuevoCliente = clienteService.save(cliente);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevoCliente);
         } catch (IllegalArgumentException e) {
-            log.error("Error al crear cliente: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.badRequest().build();
         }
     }
     
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> updateCliente(@PathVariable Long id, @Valid @RequestBody Cliente cliente) {
-        log.info("PUT /clientes/{}", id);
+        // Log removed for Docker compatibility
         
         try {
             Cliente clienteActualizado = clienteService.update(id, cliente);
             return ResponseEntity.ok(clienteActualizado);
         } catch (IllegalArgumentException e) {
-            log.error("Error al actualizar cliente: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.badRequest().build();
         }
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCliente(@PathVariable Long id) {
-        log.info("DELETE /clientes/{}", id);
+        // Log removed for Docker compatibility
         
         try {
             clienteService.deleteById(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
-            log.error("Error al eliminar cliente: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.notFound().build();
         }
     }
     
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<Void> desactivarCliente(@PathVariable Long id) {
-        log.info("PATCH /clientes/{}/desactivar", id);
+        // Log removed for Docker compatibility
         
         try {
             clienteService.desactivar(id);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
-            log.error("Error al desactivar cliente: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.notFound().build();
         }
     }

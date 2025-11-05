@@ -1,8 +1,7 @@
 package utnfc.isi.back.sim.controller;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +12,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/contenedores")
-@RequiredArgsConstructor
-@Slf4j
 public class ContenedorController {
     
     private final ContenedorService contenedorService;
+
+    @Autowired
+    public ContenedorController(ContenedorService contenedorService) {
+        this.contenedorService = contenedorService;
+    }
     
     @GetMapping
     public ResponseEntity<List<Contenedor>> getAllContenedores(
@@ -25,7 +27,7 @@ public class ContenedorController {
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) String filtro) {
         
-        log.info("GET /contenedores - clienteId: {}, estado: {}, filtro: {}", clienteId, estado, filtro);
+        // Log removed for Docker compatibility
         
         List<Contenedor> contenedores;
         
@@ -46,7 +48,7 @@ public class ContenedorController {
     
     @GetMapping("/{id}")
     public ResponseEntity<Contenedor> getContenedorById(@PathVariable Long id) {
-        log.info("GET /contenedores/{}", id);
+        // Log removed for Docker compatibility
         
         return contenedorService.findById(id)
                 .map(contenedor -> ResponseEntity.ok(contenedor))
@@ -55,7 +57,7 @@ public class ContenedorController {
     
     @GetMapping("/codigo/{codigo}")
     public ResponseEntity<Contenedor> getContenedorByCodigo(@PathVariable String codigo) {
-        log.info("GET /contenedores/codigo/{}", codigo);
+        // Log removed for Docker compatibility
         
         return contenedorService.findByCodigo(codigo)
                 .map(contenedor -> ResponseEntity.ok(contenedor))
@@ -64,52 +66,52 @@ public class ContenedorController {
     
     @PostMapping
     public ResponseEntity<Contenedor> createContenedor(@Valid @RequestBody Contenedor contenedor) {
-        log.info("POST /contenedores - {}", contenedor.getCodigo());
+        // Log removed for Docker compatibility
         
         try {
             Contenedor nuevoContenedor = contenedorService.save(contenedor);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevoContenedor);
         } catch (IllegalArgumentException e) {
-            log.error("Error al crear contenedor: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.badRequest().build();
         }
     }
     
     @PutMapping("/{id}")
     public ResponseEntity<Contenedor> updateContenedor(@PathVariable Long id, @Valid @RequestBody Contenedor contenedor) {
-        log.info("PUT /contenedores/{}", id);
+        // Log removed for Docker compatibility
         
         try {
             Contenedor contenedorActualizado = contenedorService.update(id, contenedor);
             return ResponseEntity.ok(contenedorActualizado);
         } catch (IllegalArgumentException e) {
-            log.error("Error al actualizar contenedor: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.badRequest().build();
         }
     }
     
     @PatchMapping("/{id}/estado")
     public ResponseEntity<Contenedor> actualizarEstado(@PathVariable Long id, @RequestParam String estado) {
-        log.info("PATCH /contenedores/{}/estado - nuevo estado: {}", id, estado);
+        // Log removed for Docker compatibility
         
         try {
             Contenedor contenedorActualizado = contenedorService.actualizarEstado(id, estado);
             return ResponseEntity.ok(contenedorActualizado);
         } catch (IllegalArgumentException e) {
-            log.error("Error al actualizar estado del contenedor: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.badRequest().build();
         }
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteContenedor(@PathVariable Long id) {
-        log.info("DELETE /contenedores/{}", id);
+        // Log removed for Docker compatibility
         
         try {
             contenedorService.deleteById(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
-            log.error("Error al eliminar contenedor: {}", e.getMessage());
+            // Log removed for Docker compatibility
             return ResponseEntity.notFound().build();
         }
     }

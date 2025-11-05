@@ -1,0 +1,40 @@
+# Configuración para Docker Profile
+server:
+  port: 8080
+
+spring:
+  application:
+    name: servicio-geolocalizacion
+
+# Configuración de Swagger/OpenAPI
+springdoc:
+  swagger-ui:
+    path: /doc/swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+# Google Maps API Configuration
+google:
+  maps:
+    api-key: ${GOOGLE_MAPS_API_KEY:AIzaSyDvVNH28G-H54CrvbqPcnXELyf6WTY202M}
+    distance-matrix:
+      url: https://maps.googleapis.com/maps/api/distancematrix/json
+
+# Actuator para health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Configuración de logs optimizada para contenedores
+logging:
+  level:
+    root: INFO
+    utnfc.isi.back.sim: DEBUG
+    org.springframework.web.client: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

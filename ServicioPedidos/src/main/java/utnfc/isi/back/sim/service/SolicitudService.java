@@ -1,7 +1,6 @@
 package utnfc.isi.back.sim.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utnfc.isi.back.sim.domain.Solicitud;
@@ -14,71 +13,76 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class SolicitudService {
     
     private final SolicitudRepository solicitudRepository;
     private final ContenedorService contenedorService;
     private final ClienteService clienteService;
+
+    @Autowired
+    public SolicitudService(SolicitudRepository solicitudRepository, ContenedorService contenedorService, ClienteService clienteService) {
+        this.solicitudRepository = solicitudRepository;
+        this.contenedorService = contenedorService;
+        this.clienteService = clienteService;
+    }
     
     @Transactional(readOnly = true)
     public List<Solicitud> findAll() {
-        log.debug("Buscando todas las solicitudes");
+        // Log removed for Docker compatibility
         return solicitudRepository.findAll();
     }
     
     @Transactional(readOnly = true)
     public Optional<Solicitud> findById(Long id) {
-        log.debug("Buscando solicitud por ID: {}", id);
+        // Log removed for Docker compatibility
         return solicitudRepository.findById(id);
     }
     
     @Transactional(readOnly = true)
     public Optional<Solicitud> findByNumero(String numero) {
-        log.debug("Buscando solicitud por número: {}", numero);
+        // Log removed for Docker compatibility
         return solicitudRepository.findByNumero(numero);
     }
     
     @Transactional(readOnly = true)
     public List<Solicitud> findByClienteId(Long clienteId) {
-        log.debug("Buscando solicitudes por cliente ID: {}", clienteId);
+        // Log removed for Docker compatibility
         return solicitudRepository.findByClienteId(clienteId);
     }
     
     @Transactional(readOnly = true)
     public List<Solicitud> findByEstado(String estado) {
-        log.debug("Buscando solicitudes por estado: {}", estado);
+        // Log removed for Docker compatibility
         return solicitudRepository.findByEstado(estado);
     }
     
     @Transactional(readOnly = true)
     public List<Solicitud> findByClienteIdAndEstado(Long clienteId, String estado) {
-        log.debug("Buscando solicitudes por cliente ID: {} y estado: {}", clienteId, estado);
+        // Log removed for Docker compatibility
         return solicitudRepository.findByClienteIdAndEstado(clienteId, estado);
     }
     
     @Transactional(readOnly = true)
     public List<Solicitud> findByFechaCreacion(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
-        log.debug("Buscando solicitudes entre fechas: {} - {}", fechaInicio, fechaFin);
+        // Log removed for Docker compatibility
         return solicitudRepository.findByFechaCreacionBetween(fechaInicio, fechaFin);
     }
     
     @Transactional(readOnly = true)
     public Optional<Solicitud> findByContenedorId(Long contenedorId) {
-        log.debug("Buscando solicitud por contenedor ID: {}", contenedorId);
+        // Log removed for Docker compatibility
         return solicitudRepository.findByContenedorId(contenedorId);
     }
     
     @Transactional(readOnly = true)
     public Long countByEstado(String estado) {
-        log.debug("Contando solicitudes por estado: {}", estado);
+        // Log removed for Docker compatibility
         return solicitudRepository.countByEstado(estado);
     }
     
     public Solicitud crearSolicitud(Long clienteId, Contenedor contenedorData) {
-        log.debug("Creando nueva solicitud para cliente ID: {}", clienteId);
+        // Log removed for Docker compatibility
         
         // Verificar que el cliente existe
         Cliente cliente = clienteService.findById(clienteId)
@@ -102,7 +106,7 @@ public class SolicitudService {
     }
     
     public Solicitud save(Solicitud solicitud) {
-        log.debug("Guardando solicitud: {}", solicitud.getNumero());
+        // Log removed for Docker compatibility
         
         // Validar que el número no esté duplicado
         if (solicitud.getId() == null && solicitudRepository.existsByNumero(solicitud.getNumero())) {
@@ -113,7 +117,7 @@ public class SolicitudService {
     }
     
     public Solicitud actualizarEstado(Long id, String nuevoEstado) {
-        log.debug("Actualizando estado de solicitud ID: {} a: {}", id, nuevoEstado);
+        // Log removed for Docker compatibility
         
         return solicitudRepository.findById(id)
                 .map(solicitud -> {
@@ -137,14 +141,14 @@ public class SolicitudService {
                             break;
                     }
                     
-                    log.debug("Estado de solicitud {} cambiado de {} a {}", id, estadoAnterior, nuevoEstado);
+                    // Log removed for Docker compatibility
                     return solicitudRepository.save(solicitud);
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada con ID: " + id));
     }
     
     public Solicitud update(Long id, Solicitud solicitudActualizada) {
-        log.debug("Actualizando solicitud con ID: {}", id);
+        // Log removed for Docker compatibility
         
         return solicitudRepository.findById(id)
                 .map(solicitud -> {
@@ -161,7 +165,7 @@ public class SolicitudService {
     }
     
     public void deleteById(Long id) {
-        log.debug("Eliminando solicitud con ID: {}", id);
+        // Log removed for Docker compatibility
         
         if (!solicitudRepository.existsById(id)) {
             throw new IllegalArgumentException("Solicitud no encontrada con ID: " + id);

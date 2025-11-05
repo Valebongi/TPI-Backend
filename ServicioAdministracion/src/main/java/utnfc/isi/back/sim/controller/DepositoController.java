@@ -1,6 +1,6 @@
 package utnfc.isi.back.sim.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import utnfc.isi.back.sim.domain.Deposito;
@@ -10,9 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/depositos")
-@RequiredArgsConstructor
 public class DepositoController {
     private final DepositoService depositoService;
+
+    @Autowired
+    public DepositoController(DepositoService depositoService) {
+        this.depositoService = depositoService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Deposito>> all() { return ResponseEntity.ok(depositoService.findAll()); }

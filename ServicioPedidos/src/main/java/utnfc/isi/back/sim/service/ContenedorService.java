@@ -1,7 +1,6 @@
 package utnfc.isi.back.sim.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utnfc.isi.back.sim.domain.Contenedor;
@@ -11,57 +10,60 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional
 public class ContenedorService {
     
     private final ContenedorRepository contenedorRepository;
+
+    @Autowired
+    public ContenedorService(ContenedorRepository contenedorRepository) {
+        this.contenedorRepository = contenedorRepository;
+    }
     
     @Transactional(readOnly = true)
     public List<Contenedor> findAll() {
-        log.debug("Buscando todos los contenedores");
+        // Log removed for Docker compatibility
         return contenedorRepository.findAll();
     }
     
     @Transactional(readOnly = true)
     public Optional<Contenedor> findById(Long id) {
-        log.debug("Buscando contenedor por ID: {}", id);
+        // Log removed for Docker compatibility
         return contenedorRepository.findById(id);
     }
     
     @Transactional(readOnly = true)
     public Optional<Contenedor> findByCodigo(String codigo) {
-        log.debug("Buscando contenedor por código: {}", codigo);
+        // Log removed for Docker compatibility
         return contenedorRepository.findByCodigo(codigo);
     }
     
     @Transactional(readOnly = true)
     public List<Contenedor> findByClienteId(Long clienteId) {
-        log.debug("Buscando contenedores por cliente ID: {}", clienteId);
+        // Log removed for Docker compatibility
         return contenedorRepository.findByClienteId(clienteId);
     }
     
     @Transactional(readOnly = true)
     public List<Contenedor> findByEstado(String estado) {
-        log.debug("Buscando contenedores por estado: {}", estado);
+        // Log removed for Docker compatibility
         return contenedorRepository.findByEstado(estado);
     }
     
     @Transactional(readOnly = true)
     public List<Contenedor> findByClienteIdAndEstado(Long clienteId, String estado) {
-        log.debug("Buscando contenedores por cliente ID: {} y estado: {}", clienteId, estado);
+        // Log removed for Docker compatibility
         return contenedorRepository.findByClienteIdAndEstado(clienteId, estado);
     }
     
     @Transactional(readOnly = true)
     public List<Contenedor> findByFiltro(String filtro) {
-        log.debug("Buscando contenedores por filtro: {}", filtro);
+        // Log removed for Docker compatibility
         return contenedorRepository.findByFiltro(filtro);
     }
     
     public Contenedor save(Contenedor contenedor) {
-        log.debug("Guardando contenedor: {}", contenedor.getCodigo());
+        // Log removed for Docker compatibility
         
         // Validar que el código no esté duplicado
         if (contenedor.getId() == null && contenedorRepository.existsByCodigo(contenedor.getCodigo())) {
@@ -77,7 +79,7 @@ public class ContenedorService {
     }
     
     public Contenedor update(Long id, Contenedor contenedorActualizado) {
-        log.debug("Actualizando contenedor con ID: {}", id);
+        // Log removed for Docker compatibility
         
         return contenedorRepository.findById(id)
                 .map(contenedor -> {
@@ -105,7 +107,7 @@ public class ContenedorService {
     }
     
     public void deleteById(Long id) {
-        log.debug("Eliminando contenedor con ID: {}", id);
+        // Log removed for Docker compatibility
         
         if (!contenedorRepository.existsById(id)) {
             throw new IllegalArgumentException("Contenedor no encontrado con ID: " + id);
@@ -115,7 +117,7 @@ public class ContenedorService {
     }
     
     public Contenedor actualizarEstado(Long id, String nuevoEstado) {
-        log.debug("Actualizando estado del contenedor ID: {} a: {}", id, nuevoEstado);
+        // Log removed for Docker compatibility
         
         return contenedorRepository.findById(id)
                 .map(contenedor -> {

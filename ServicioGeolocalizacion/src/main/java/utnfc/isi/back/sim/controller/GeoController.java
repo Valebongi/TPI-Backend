@@ -1,6 +1,6 @@
 package utnfc.isi.back.sim.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import utnfc.isi.back.sim.model.DistanciaDTO;
 import utnfc.isi.back.sim.service.GeoService;
@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/distancia")
-@RequiredArgsConstructor
 @Tag(name = "Geolocalizacion", description = "API para cálculo de distancias usando Google Maps")
 public class GeoController {
 
     private final GeoService geoService;
+
+    @Autowired
+    public GeoController(GeoService geoService) {
+        this.geoService = geoService;
+    }
 
     @GetMapping
     @Operation(summary = "Calcular distancia entre dos puntos", 

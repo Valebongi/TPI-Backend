@@ -1,0 +1,27 @@
+# Configuración para Docker Profile
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: servicio-geolocalizacion
+          uri: http://servicio-geolocalizacion:8084
+          predicates:
+            - Path=/api/geolocalizacion/**
+
+# Configuración de Eureka (si se usa)
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    hostname: api-gateway
+
+# Configuración de logs
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

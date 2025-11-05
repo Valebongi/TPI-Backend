@@ -1,6 +1,6 @@
 package utnfc.isi.back.sim.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import utnfc.isi.back.sim.domain.ParametroGlobal;
 import utnfc.isi.back.sim.repository.ParametroGlobalRepository;
@@ -10,9 +10,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class ParametroGlobalService {
     private final ParametroGlobalRepository parametroGlobalRepository;
+
+    @Autowired
+    public ParametroGlobalService(ParametroGlobalRepository parametroGlobalRepository) {
+        this.parametroGlobalRepository = parametroGlobalRepository;
+    }
 
     public List<ParametroGlobal> findAll() { 
         return parametroGlobalRepository.findAll(); 

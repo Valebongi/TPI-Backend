@@ -1,6 +1,6 @@
 package utnfc.isi.back.sim.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -10,13 +10,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
-@RequiredArgsConstructor
 public class GeoService {
 
     @Value("${google.maps.api-key}")
     private String apiKey;
 
     private final RestClient.Builder builder;
+
+    @Autowired
+    public GeoService(RestClient.Builder builder) {
+        this.builder = builder;
+    }
 
     public DistanciaDTO calcularDistancia(String origen, String destino) throws Exception {
         RestClient client = builder.baseUrl("https://maps.googleapis.com/maps/api").build();
