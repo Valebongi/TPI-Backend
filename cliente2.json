@@ -1,9 +1,0 @@
-{
-  "nombre": "Maria Elena",
-  "apellido": "Gonzalez",
-  "email": "maria.gonzalez@empresa.com",
-  "telefono": "+54-341-987-6543",
-  "direccion": "San Martin 567, Rosario",
-  "keycloakId": null,
-  "activo": true
-}
