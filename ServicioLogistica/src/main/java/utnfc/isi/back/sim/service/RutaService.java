@@ -9,6 +9,7 @@ import utnfc.isi.back.sim.repository.RutaRepository;
 import utnfc.isi.back.sim.dto.RutaCreacionRequest;
 import utnfc.isi.back.sim.dto.RutaTentativa;
 import utnfc.isi.back.sim.dto.TramoTentativo;
+import utnfc.isi.back.sim.client.PedidosClient;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -26,11 +27,13 @@ public class RutaService {
     
     private final RutaRepository rutaRepository;
     private final TramoService tramoService;
+    private final PedidosClient pedidosClient;
 
     @Autowired
-    public RutaService(RutaRepository rutaRepository, TramoService tramoService) {
+    public RutaService(RutaRepository rutaRepository, TramoService tramoService, PedidosClient pedidosClient) {
         this.rutaRepository = rutaRepository;
         this.tramoService = tramoService;
+        this.pedidosClient = pedidosClient;
     }
     
     /**
@@ -214,7 +217,60 @@ public class RutaService {
             throw new RuntimeException("Error al crear ruta automática: " + e.getMessage(), e);
         }
     }
-    
+
+    /**
+     * Crea una ruta automáticamente basándose solo en el ID de la solicitud
+     * Obtiene automáticamente todos los datos necesarios desde el servicio de pedidos
+     */
+    public Ruta crearRutaDesdeSolicitud(Long solicitudId) {
+        System.out.println("=== RUTA SERVICE: Creando ruta desde solicitud ID: " + solicitudId + " ===");
+        
+        try {
+            // Validar que no exista ya una ruta para esta solicitud
+            if (rutaRepository.findBySolicitudId(solicitudId).isPresent()) {
+                throw new IllegalArgumentException("Ya existe una ruta para la solicitud ID: " + solicitudId);
+            }
+            
+            // Obtener datos de la solicitud desde el servicio de pedidos
+            PedidosClient.SolicitudResponse solicitud = pedidosClient.obtenerSolicitud(solicitudId);
+            
+            // Validar que la solicitud esté en estado BORRADOR
+            if (!"BORRADOR".equals(solicitud.getEstado())) {
+                throw new IllegalArgumentException("La solicitud debe estar en estado BORRADOR para crear una ruta. Estado actual: " + solicitud.getEstado());
+            }
+            
+            // Crear el request con los datos obtenidos
+            RutaCreacionRequest request = new RutaCreacionRequest(
+                solicitud.getId(),
+                solicitud.getOrigenCoordenadas(),
+                solicitud.getDestinoCoordenadas(),
+                solicitud.getDireccionOrigen(),
+                solicitud.getDireccionDestino(),
+                solicitud.getContenedor() != null ? solicitud.getContenedor().getPeso() : BigDecimal.ZERO,
+                solicitud.getContenedor() != null ? solicitud.getContenedor().getVolumen() : BigDecimal.ZERO
+            );
+            
+            System.out.println("=== RUTA SERVICE: Datos obtenidos - Origen: " + request.getOrigenDescripcion() + ", Destino: " + request.getDestinoDescripcion() + " ===");
+            
+            // Crear la ruta usando el método existente
+            Ruta rutaCreada = crearRutaAutomatica(request);
+            
+            // Actualizar el estado de la solicitud a PROGRAMADA
+            boolean estadoActualizado = pedidosClient.actualizarEstadoSolicitud(solicitudId, "PROGRAMADA");
+            if (estadoActualizado) {
+                System.out.println("=== RUTA SERVICE: Estado de solicitud actualizado a PROGRAMADA ===");
+            } else {
+                System.out.println("=== RUTA SERVICE: WARNING - No se pudo actualizar el estado de la solicitud ===");
+            }
+            
+            return rutaCreada;
+            
+        } catch (Exception e) {
+            System.out.println("=== RUTA SERVICE: Error al crear ruta desde solicitud: " + e.getMessage() + " ===");
+            throw new RuntimeException("Error al crear ruta desde solicitud ID " + solicitudId + ": " + e.getMessage(), e);
+        }
+    }
+
     /**
      * Crea tramos automáticamente para una ruta basándose en el origen y destino
      */

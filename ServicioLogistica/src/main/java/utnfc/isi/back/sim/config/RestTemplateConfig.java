@@ -12,6 +12,7 @@ public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate() {
+        // RestTemplate simple que soporta PATCH nativo desde Spring 5+
         return new RestTemplate();
     }
 }

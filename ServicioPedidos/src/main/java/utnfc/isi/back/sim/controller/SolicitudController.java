@@ -232,6 +232,23 @@ public class SolicitudController {
     }
     
     /**
+     * PUT /{id}/estado - Endpoint alternativo para uso interno desde otros microservicios
+     * Funciona igual que PATCH pero usando PUT que es compatible con RestTemplate básico
+     */
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<Solicitud> actualizarEstadoPut(@PathVariable Long id, @RequestParam String estado) {
+        // Log removed for Docker compatibility
+        
+        try {
+            Solicitud solicitudActualizada = solicitudService.actualizarEstado(id, estado);
+            return ResponseEntity.ok(solicitudActualizada);
+        } catch (IllegalArgumentException e) {
+            // Log removed for Docker compatibility
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    /**
      * FASE 3: Asignar ruta elegida a una solicitud y cambiar estado a PROGRAMADA
      */
     @PostMapping("/{id}/asignar-ruta")

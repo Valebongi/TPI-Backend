@@ -134,6 +134,38 @@ public class RutaController {
     }
     
     /**
+     * POST /rutas/desde-solicitud/{solicitudId} - Crear ruta automáticamente desde ID de solicitud
+     * FASE 3: Crear ruta y cambiar solicitud a estado PROGRAMADA
+     */
+    @PostMapping("/desde-solicitud/{solicitudId}")
+    public ResponseEntity<RutaCreacionResponse> crearRutaDesdeSolicitud(@PathVariable Long solicitudId) {
+        System.out.println("=== CONTROLADOR RUTAS: Creando ruta desde solicitud ID: " + solicitudId + " ===");
+        
+        try {
+            Ruta rutaCreada = rutaService.crearRutaDesdeSolicitud(solicitudId);
+            
+            RutaCreacionResponse response = new RutaCreacionResponse(
+                    rutaCreada.getId(),
+                    rutaCreada.getSolicitudId(),
+                    rutaCreada.getEstado().toString(),
+                    rutaCreada.getCostoTotalAproximado() != null ? 
+                        new java.math.BigDecimal(rutaCreada.getCostoTotalAproximado().toString()) : null,
+                    rutaCreada.getObservaciones()
+            );
+            
+            System.out.println("=== CONTROLADOR RUTAS: Ruta creada exitosamente con ID: " + rutaCreada.getId() + " ===");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            System.out.println("=== CONTROLADOR RUTAS: Error de validación: " + e.getMessage() + " ===");
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.out.println("=== CONTROLADOR RUTAS: Error interno: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * PUT /rutas/{id} - Actualizar estado o información de la ruta
      */
     @PutMapping("/{id}")
