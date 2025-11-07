@@ -34,4 +34,54 @@ public class DepositoController {
         depositoService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+    
+    // ENDPOINT DE PRUEBA: Solo coordenadas del depósito
+    @GetMapping("/{id}/coordenadas")
+    public ResponseEntity<CoordenadasResponse> getCoordenadas(@PathVariable Integer id) {
+        System.out.println("=== SERVICIO ADMIN: Solicitando coordenadas del depósito ID: " + id + " ===");
+        
+        return depositoService.findById(id)
+                .map(deposito -> {
+                    CoordenadasResponse response = new CoordenadasResponse(
+                        deposito.getId(),
+                        deposito.getDireccion(),
+                        deposito.getLatitud(),
+                        deposito.getLongitud()
+                    );
+                    System.out.println("=== SERVICIO ADMIN: Devolviendo coordenadas - " + 
+                                     "Lat: " + response.getLatitud() + ", Lng: " + response.getLongitud() + " ===");
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+    
+    // DTO para coordenadas
+    public static class CoordenadasResponse {
+        private Integer id;
+        private String direccion;
+        private java.math.BigDecimal latitud;
+        private java.math.BigDecimal longitud;
+        
+        public CoordenadasResponse() {}
+        
+        public CoordenadasResponse(Integer id, String direccion, java.math.BigDecimal latitud, java.math.BigDecimal longitud) {
+            this.id = id;
+            this.direccion = direccion;
+            this.latitud = latitud;
+            this.longitud = longitud;
+        }
+        
+        // Getters y Setters
+        public Integer getId() { return id; }
+        public void setId(Integer id) { this.id = id; }
+        
+        public String getDireccion() { return direccion; }
+        public void setDireccion(String direccion) { this.direccion = direccion; }
+        
+        public java.math.BigDecimal getLatitud() { return latitud; }
+        public void setLatitud(java.math.BigDecimal latitud) { this.latitud = latitud; }
+        
+        public java.math.BigDecimal getLongitud() { return longitud; }
+        public void setLongitud(java.math.BigDecimal longitud) { this.longitud = longitud; }
+    }
 }

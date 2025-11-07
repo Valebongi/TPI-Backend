@@ -8,10 +8,34 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: servicio-geolocalizacion
-          uri: http://servicio-geolocalizacion:8084
+        # Servicio de Logística
+        - id: servicio-logistica
+          uri: http://servicio-logistica:8080
           predicates:
-            - Path=/api/geolocalizacion/**
+            - Path=/api/logistica/**
+          filters:
+            - StripPrefix=2
+        # Servicio de Pedidos  
+        - id: servicio-pedidos
+          uri: http://servicio-pedidos:8080
+          predicates:
+            - Path=/api/pedidos/**
+          filters:
+            - StripPrefix=2
+        # Servicio de Administración
+        - id: servicio-administracion
+          uri: http://servicio-administracion:8080
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=2
+        # Servicio de Geolocalización
+        - id: servicio-geolocalizacion
+          uri: http://servicio-geolocalizacion:8080
+          predicates:
+            - Path=/api/geo/**
+          filters:
+            - StripPrefix=2
 
 # Configuración de Eureka (si se usa)
 eureka:

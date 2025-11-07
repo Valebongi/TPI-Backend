@@ -1,0 +1,23 @@
+### Fase 1: Creación de Solicitud (ROL: Cliente)
+1. Cliente crea una solicitud con contenedor, origen y destino
+2. La solicitud queda en estado *BORRADOR*
+
+### Fase 2: Estimación de Ruta (ROL: Operador)
+3. Operador solicita rutas tentativas con costos estimados
+4. Sistema calcula distancias usando Google Maps API
+5. Sistema retorna opciones de ruta con tramos y costos
+
+### Fase 3: Asignación de Ruta (ROL: Operador)
+6. Operador elige una ruta y la asigna a la solicitud
+7. Se crean automáticamente los *Tramos* en estado ESTIMADO
+8. Solicitud pasa a estado *PROGRAMADA*
+
+### Fase 4: Asignación de Camiones (ROL: Operador)
+9. Operador asigna camión a cada tramo
+10. Sistema valida capacidad (peso/volumen)
+11. Tramo pasa a estado *ASIGNADO*
+
+### Fase 5: Ejecución (ROL: Transportista)
+12. Transportista inicia el tramo (estado *EN_CURSO*)
+13. Transportista finaliza el tramo (estado *COMPLETADO*)
+14. Si es el último tramo, Solicitud pasa a *ENTREGADA*

@@ -1,0 +1,10 @@
+{
+  "codigo": "CONT-001",
+  "peso": 1500.50,
+  "volumen": 25.75,
+  "descripcion": "Contenedor con productos electrónicos",
+  "cliente": {
+    "id": 1
+  },
+  "idDeposito": 1
+}

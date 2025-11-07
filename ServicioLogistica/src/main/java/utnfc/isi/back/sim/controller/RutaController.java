@@ -8,6 +8,9 @@ import utnfc.isi.back.sim.domain.Ruta;
 import utnfc.isi.back.sim.domain.Tramo;
 import utnfc.isi.back.sim.service.RutaService;
 import utnfc.isi.back.sim.service.TramoService;
+import utnfc.isi.back.sim.dto.RutaCreacionRequest;
+import utnfc.isi.back.sim.dto.RutaCreacionResponse;
+import utnfc.isi.back.sim.dto.RutaTentativa;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -17,7 +20,7 @@ import java.util.List;
  * Implementa los endpoints definidos en los lineamientos del TP
  */
 @RestController
-@RequestMapping("/api/rutas")
+@RequestMapping("/rutas")
 @CrossOrigin(origins = "*")
 public class RutaController {
     
@@ -28,6 +31,24 @@ public class RutaController {
     public RutaController(RutaService rutaService, TramoService tramoService) {
         this.rutaService = rutaService;
         this.tramoService = tramoService;
+    }
+    
+    /**
+     * GET /rutas/tentativas - Calcular rutas tentativas usando Google Maps
+     * FASE 2: El operador solicita rutas tentativas para evaluar opciones
+     */
+    @GetMapping("/tentativas")
+    public ResponseEntity<List<RutaTentativa>> calcularRutasTentativas(
+            @RequestParam("origen") String origen,
+            @RequestParam("destino") String destino) {
+        
+        try {
+            List<RutaTentativa> rutasTentativas = rutaService.calcularRutasTentativas(origen, destino);
+            return ResponseEntity.ok(rutasTentativas);
+        } catch (Exception e) {
+            // Log removed for Docker compatibility: Error al calcular rutas tentativas
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
     /**
@@ -78,6 +99,36 @@ public class RutaController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             // Log removed for Docker compatibility: Error al crear ruta
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * POST /rutas/crear-automatica - Crear ruta automáticamente desde otros microservicios
+     * Este endpoint permite la creación automática de rutas cuando se crean solicitudes
+     */
+    @PostMapping("/crear-automatica")
+    public ResponseEntity<RutaCreacionResponse> crearRutaAutomatica(@Valid @RequestBody RutaCreacionRequest request) {
+        // Log removed for Docker compatibility: Creando ruta automática para solicitud
+        
+        try {
+            Ruta rutaCreada = rutaService.crearRutaAutomatica(request);
+            
+            RutaCreacionResponse response = new RutaCreacionResponse(
+                    rutaCreada.getId(),
+                    rutaCreada.getSolicitudId(),
+                    rutaCreada.getEstado().toString(),
+                    rutaCreada.getCostoTotalAproximado() != null ? 
+                        new java.math.BigDecimal(rutaCreada.getCostoTotalAproximado().toString()) : null,
+                    rutaCreada.getObservaciones()
+            );
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            // Log removed for Docker compatibility: Error de validación al crear ruta automática
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            // Log removed for Docker compatibility: Error al crear ruta automática
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

@@ -13,13 +13,13 @@ INSERT INTO CLIENTES (NOMBRE, APELLIDO, EMAIL, TELEFONO, DIRECCION, KEYCLOAK_ID,
 ('Laura Beatriz', 'López', 'llopez@empresarios.org.ar', '+54-11-8901-2345', 'Puerto Madero 2345, CABA', 'kc_006', true);
 
 -- Datos de ejemplo para CONTENEDORES
-INSERT INTO CONTENEDORES (CODIGO, PESO, VOLUMEN, ESTADO, DESCRIPCION, ID_CLIENTE, DIRECCION_ORIGEN, LATITUD_ORIGEN, LONGITUD_ORIGEN, DIRECCION_DESTINO, LATITUD_DESTINO, LONGITUD_DESTINO) VALUES
-('CNT-001', 15000.00, 45.5, 'EN_TRANSITO', 'Maquinaria industrial pesada', 1, 'Puerto Buenos Aires - Dársena Sud', -34.6037, -58.3816, 'Parque Industrial Córdoba', -31.4168, -64.1833),
-('CNT-002', 8500.00, 28.2, 'EN_DEPOSITO', 'Productos alimenticios refrigerados', 2, 'Mercado Central Rosario', -32.9443, -60.6505, 'Centro Distribución Mar del Plata', -38.0023, -57.5565),
-('CNT-003', 22000.00, 65.8, 'ENTREGADO', 'Materiales de construcción', 3, 'Fábrica Cemento Buenos Aires', -34.6037, -58.3816, 'Obra Mendoza Centro', -32.8895, -68.8458),
-('CNT-004', 12500.00, 35.4, 'PENDIENTE', 'Equipamiento médico', 4, 'Laboratorio Rosario', -32.9443, -60.6505, 'Hospital Córdoba', -31.4168, -64.1833),
-('CNT-005', 18750.00, 52.3, 'EN_TRANSITO', 'Autopartes y repuestos', 5, 'Planta Automotriz Córdoba', -31.4168, -64.1833, 'Concesionaria Buenos Aires', -34.6037, -58.3816),
-('CNT-006', 9200.00, 31.7, 'PENDIENTE', 'Textiles y confecciones', 6, 'Fábrica Textil Buenos Aires', -34.6037, -58.3816, 'Shopping Mendoza', -32.8895, -68.8458);
+INSERT INTO CONTENEDORES (CODIGO, PESO, VOLUMEN, ESTADO, DESCRIPCION, ID_CLIENTE, ID_DEPOSITO) VALUES
+('CNT-001', 15000.00, 45.5, 'EN_TRANSITO', 'Maquinaria industrial pesada', 1, 1),
+('CNT-002', 8500.00, 28.2, 'EN_DEPOSITO', 'Productos alimenticios refrigerados', 2, 2),
+('CNT-003', 22000.00, 65.8, 'ENTREGADO', 'Materiales de construcción', 3, 1),
+('CNT-004', 12500.00, 35.4, 'PENDIENTE', 'Equipamiento médico', 4, 3),
+('CNT-005', 18750.00, 52.3, 'EN_TRANSITO', 'Autopartes y repuestos', 5, 1),
+('CNT-006', 9200.00, 31.7, 'PENDIENTE', 'Textiles y confecciones', 6, 2);
 
 -- Datos de ejemplo para SOLICITUDES
 INSERT INTO SOLICITUDES (NUMERO, ID_CONTENEDOR, ID_CLIENTE, COSTO_ESTIMADO, TIEMPO_ESTIMADO_HORAS, COSTO_FINAL, TIEMPO_REAL_HORAS, ESTADO, FECHA_CREACION, FECHA_PROGRAMACION, FECHA_INICIO_TRANSITO, FECHA_ENTREGA, OBSERVACIONES, RUTA_ID) VALUES

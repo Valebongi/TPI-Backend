@@ -19,12 +19,12 @@ public class Solicitud {
     @Column(name = "NUMERO", nullable = false, unique = true, length = 50)
     private String numero;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_CONTENEDOR", nullable = false)
     @NotNull(message = "El contenedor es obligatorio")
     private Contenedor contenedor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)  
     @NotNull(message = "El cliente es obligatorio")
     private Cliente cliente;
@@ -62,6 +62,26 @@ public class Solicitud {
     @Column(name = "RUTA_ID")
     private Long rutaId; // ID de la ruta en el servicio de logística
 
+    // Campos de destino (movidos desde Contenedor)
+    @Column(name = "DIRECCION_DESTINO", length = 500)
+    private String direccionDestino;
+
+    @Column(name = "LATITUD_DESTINO", precision = 10, scale = 8)
+    private BigDecimal latitudDestino;
+
+    @Column(name = "LONGITUD_DESTINO", precision = 11, scale = 8)
+    private BigDecimal longitudDestino;
+
+    // Campos de origen (obtenidos del depósito del contenedor)
+    @Column(name = "DIRECCION_ORIGEN", length = 500)
+    private String direccionOrigen;
+
+    @Column(name = "LATITUD_ORIGEN", precision = 10, scale = 8)
+    private BigDecimal latitudOrigen;
+
+    @Column(name = "LONGITUD_ORIGEN", precision = 11, scale = 8)
+    private BigDecimal longitudOrigen;
+
     // Constructors
     public Solicitud() {
         this.numero = generateSolicitudNumber();
@@ -73,7 +93,8 @@ public class Solicitud {
                     BigDecimal costoEstimado, Integer tiempoEstimadoHoras, BigDecimal costoFinal,
                     Integer tiempoRealHoras, String estado, LocalDateTime fechaCreacion,
                     LocalDateTime fechaProgramacion, LocalDateTime fechaInicioTransito,
-                    LocalDateTime fechaEntrega, String observaciones, Long rutaId) {
+                    LocalDateTime fechaEntrega, String observaciones, Long rutaId,
+                    String direccionDestino, BigDecimal latitudDestino, BigDecimal longitudDestino) {
         this.id = id;
         this.numero = numero;
         this.contenedor = contenedor;
@@ -89,6 +110,9 @@ public class Solicitud {
         this.fechaEntrega = fechaEntrega;
         this.observaciones = observaciones;
         this.rutaId = rutaId;
+        this.direccionDestino = direccionDestino;
+        this.latitudDestino = latitudDestino;
+        this.longitudDestino = longitudDestino;
     }
 
     // Getters and Setters
@@ -136,6 +160,47 @@ public class Solicitud {
 
     public Long getRutaId() { return rutaId; }
     public void setRutaId(Long rutaId) { this.rutaId = rutaId; }
+
+    public String getDireccionDestino() { return direccionDestino; }
+    public void setDireccionDestino(String direccionDestino) { this.direccionDestino = direccionDestino; }
+
+    public BigDecimal getLatitudDestino() { return latitudDestino; }
+    public void setLatitudDestino(BigDecimal latitudDestino) { this.latitudDestino = latitudDestino; }
+
+    public BigDecimal getLongitudDestino() { return longitudDestino; }
+    public void setLongitudDestino(BigDecimal longitudDestino) { this.longitudDestino = longitudDestino; }
+
+    public String getDireccionOrigen() { return direccionOrigen; }
+    public void setDireccionOrigen(String direccionOrigen) { this.direccionOrigen = direccionOrigen; }
+
+    public BigDecimal getLatitudOrigen() { return latitudOrigen; }
+    public void setLatitudOrigen(BigDecimal latitudOrigen) { this.latitudOrigen = latitudOrigen; }
+
+    public BigDecimal getLongitudOrigen() { return longitudOrigen; }
+    public void setLongitudOrigen(BigDecimal longitudOrigen) { this.longitudOrigen = longitudOrigen; }
+    
+    // Métodos helper para comunicación con servicios de logística
+    public String getDestinoCoordenadas() {
+        if (latitudDestino != null && longitudDestino != null) {
+            return latitudDestino + "," + longitudDestino;
+        }
+        return null;
+    }
+    
+    public String getOrigenCoordenadas() {
+        if (latitudOrigen != null && longitudOrigen != null) {
+            return latitudOrigen + "," + longitudOrigen;
+        }
+        return null;
+    }
+    
+    public String getDestinoDescripcion() {
+        return direccionDestino;
+    }
+
+    public String getOrigenDescripcion() {
+        return direccionOrigen;
+    }
 
     // Builder pattern
     public static SolicitudBuilder builder() {

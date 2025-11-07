@@ -1,5 +1,6 @@
 package utnfc.isi.back.sim.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -16,6 +17,9 @@ public class Tramo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(name = "numero", nullable = false)
+    private Integer numero;
     
     // Coordenadas de origen (lat,lng separadas por coma)
     @NotNull
@@ -65,9 +69,13 @@ public class Tramo {
     @Column(name = "camion_id")
     private Long camionId;
     
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
+    
     // Relación muchos-a-uno con Ruta
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ruta_id", nullable = false)
+    @JsonIgnore
     private Ruta ruta;
     
     // Constructors
@@ -96,6 +104,7 @@ public class Tramo {
 
     // Getters
     public Long getId() { return id; }
+    public Integer getNumero() { return numero; }
     public String getOrigenCoordenadas() { return origenCoordenadas; }
     public String getDestinoCoordenadas() { return destinoCoordenadas; }
     public String getOrigenDescripcion() { return origenDescripcion; }
@@ -114,6 +123,7 @@ public class Tramo {
 
     // Setters
     public void setId(Long id) { this.id = id; }
+    public void setNumero(Integer numero) { this.numero = numero; }
     public void setOrigenCoordenadas(String origenCoordenadas) { this.origenCoordenadas = origenCoordenadas; }
     public void setDestinoCoordenadas(String destinoCoordenadas) { this.destinoCoordenadas = destinoCoordenadas; }
     public void setOrigenDescripcion(String origenDescripcion) { this.origenDescripcion = origenDescripcion; }
@@ -129,6 +139,63 @@ public class Tramo {
     public void setFechaHoraFin(LocalDateTime fechaHoraFin) { this.fechaHoraFin = fechaHoraFin; }
     public void setCamionId(Long camionId) { this.camionId = camionId; }
     public void setRuta(Ruta ruta) { this.ruta = ruta; }
+    
+    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    
+    // Builder simple
+    public static Tramo builder() {
+        return new Tramo();
+    }
+    
+    public Tramo ruta(Ruta ruta) {
+        this.ruta = ruta;
+        return this;
+    }
+    
+    public Tramo numero(Integer numero) {
+        this.numero = numero;
+        return this;
+    }
+    
+    public Tramo tipo(TipoTramo tipo) {
+        this.tipo = tipo;
+        return this;
+    }
+    
+    public Tramo estado(EstadoTramo estado) {
+        this.estado = estado;
+        return this;
+    }
+    
+    public Tramo origenCoordenadas(String origenCoordenadas) {
+        this.origenCoordenadas = origenCoordenadas;
+        return this;
+    }
+    
+    public Tramo destinoCoordenadas(String destinoCoordenadas) {
+        this.destinoCoordenadas = destinoCoordenadas;
+        return this;
+    }
+    
+    public Tramo origenDescripcion(String origenDescripcion) {
+        this.origenDescripcion = origenDescripcion;
+        return this;
+    }
+    
+    public Tramo destinoDescripcion(String destinoDescripcion) {
+        this.destinoDescripcion = destinoDescripcion;
+        return this;
+    }
+    
+    public Tramo fechaCreacion(java.time.LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+        return this;
+    }
+    
+    public Tramo build() {
+        return this;
+    }
     
     /**
      * Enumeration para los tipos de tramo

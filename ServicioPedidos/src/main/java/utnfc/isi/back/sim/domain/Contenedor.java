@@ -43,34 +43,12 @@ public class Contenedor {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_CLIENTE", nullable = false)
-    @NotNull(message = "El cliente es obligatorio")
+    // @NotNull removido - el cliente se asigna automáticamente en el servicio
     private Cliente cliente;
 
-    @Column(name = "DIRECCION_ORIGEN", nullable = false, length = 500)
-    @NotBlank(message = "La dirección de origen es obligatoria")
-    @Size(max = 500, message = "La dirección de origen no puede exceder 500 caracteres")
-    private String direccionOrigen;
-
-    @Column(name = "LATITUD_ORIGEN", nullable = false, precision = 10, scale = 8)
-    @NotNull(message = "La latitud de origen es obligatoria")
-    private BigDecimal latitudOrigen;
-
-    @Column(name = "LONGITUD_ORIGEN", nullable = false, precision = 11, scale = 8)
-    @NotNull(message = "La longitud de origen es obligatoria")
-    private BigDecimal longitudOrigen;
-
-    @Column(name = "DIRECCION_DESTINO", nullable = false, length = 500)
-    @NotBlank(message = "La dirección de destino es obligatoria")
-    @Size(max = 500, message = "La dirección de destino no puede exceder 500 caracteres")
-    private String direccionDestino;
-
-    @Column(name = "LATITUD_DESTINO", nullable = false, precision = 10, scale = 8)
-    @NotNull(message = "La latitud de destino es obligatoria")
-    private BigDecimal latitudDestino;
-
-    @Column(name = "LONGITUD_DESTINO", nullable = false, precision = 11, scale = 8)
-    @NotNull(message = "La longitud de destino es obligatoria")
-    private BigDecimal longitudDestino;
+    @Column(name = "ID_DEPOSITO", nullable = false)
+    @NotNull(message = "El ID del depósito es obligatorio")
+    private Integer idDeposito;
 
     // Constructors
     public Contenedor() {
@@ -78,9 +56,7 @@ public class Contenedor {
     }
 
     public Contenedor(Long id, String codigo, BigDecimal peso, BigDecimal volumen, String estado,
-                     String descripcion, Cliente cliente, String direccionOrigen, BigDecimal latitudOrigen,
-                     BigDecimal longitudOrigen, String direccionDestino, BigDecimal latitudDestino,
-                     BigDecimal longitudDestino) {
+                     String descripcion, Cliente cliente, Integer idDeposito) {
         this.id = id;
         this.codigo = codigo;
         this.peso = peso;
@@ -88,12 +64,7 @@ public class Contenedor {
         this.estado = estado;
         this.descripcion = descripcion;
         this.cliente = cliente;
-        this.direccionOrigen = direccionOrigen;
-        this.latitudOrigen = latitudOrigen;
-        this.longitudOrigen = longitudOrigen;
-        this.direccionDestino = direccionDestino;
-        this.latitudDestino = latitudDestino;
-        this.longitudDestino = longitudDestino;
+        this.idDeposito = idDeposito;
     }
 
     // Getters and Setters
@@ -118,21 +89,6 @@ public class Contenedor {
     public Cliente getCliente() { return cliente; }
     public void setCliente(Cliente cliente) { this.cliente = cliente; }
 
-    public String getDireccionOrigen() { return direccionOrigen; }
-    public void setDireccionOrigen(String direccionOrigen) { this.direccionOrigen = direccionOrigen; }
-
-    public BigDecimal getLatitudOrigen() { return latitudOrigen; }
-    public void setLatitudOrigen(BigDecimal latitudOrigen) { this.latitudOrigen = latitudOrigen; }
-
-    public BigDecimal getLongitudOrigen() { return longitudOrigen; }
-    public void setLongitudOrigen(BigDecimal longitudOrigen) { this.longitudOrigen = longitudOrigen; }
-
-    public String getDireccionDestino() { return direccionDestino; }
-    public void setDireccionDestino(String direccionDestino) { this.direccionDestino = direccionDestino; }
-
-    public BigDecimal getLatitudDestino() { return latitudDestino; }
-    public void setLatitudDestino(BigDecimal latitudDestino) { this.latitudDestino = latitudDestino; }
-
-    public BigDecimal getLongitudDestino() { return longitudDestino; }
-    public void setLongitudDestino(BigDecimal longitudDestino) { this.longitudDestino = longitudDestino; }
+    public Integer getIdDeposito() { return idDeposito; }
+    public void setIdDeposito(Integer idDeposito) { this.idDeposito = idDeposito; }
 }

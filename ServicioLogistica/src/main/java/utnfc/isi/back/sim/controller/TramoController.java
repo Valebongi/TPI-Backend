@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import utnfc.isi.back.sim.domain.Tramo;
 import utnfc.isi.back.sim.service.TramoService;
+import utnfc.isi.back.sim.dto.AsignarCamionRequest;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  * Implementa los endpoints definidos en los lineamientos del TP
  */
 @RestController
-@RequestMapping("/api/tramos")
+@RequestMapping("/tramos")
 @CrossOrigin(origins = "*")
 public class TramoController {
     
@@ -31,8 +32,8 @@ public class TramoController {
      */
     @GetMapping
     public ResponseEntity<List<Tramo>> listarTramos(
-            @RequestParam(required = false) Tramo.EstadoTramo estado,
-            @RequestParam(required = false) Long camionId) {
+            @RequestParam(value = "estado", required = false) Tramo.EstadoTramo estado,
+            @RequestParam(value = "camionId", required = false) Long camionId) {
         // Log removed for Docker compatibility
         
         try {
@@ -94,7 +95,8 @@ public class TramoController {
     }
     
     /**
-     * PUT /tramos/{id}/asignar - Asignar tramo a un camión
+     * FASE 4: PUT /tramos/{id}/asignar - Asignar tramo a un camión
+     * El operador asigna un camión específico a un tramo pendiente
      */
     @PutMapping("/{id}/asignar")
     public ResponseEntity<Tramo> asignarCamion(@PathVariable Long id, @RequestParam Long camionId) {
@@ -103,11 +105,31 @@ public class TramoController {
         try {
             Tramo tramoAsignado = tramoService.asignarCamion(id, camionId);
             return ResponseEntity.ok(tramoAsignado);
-        } catch (RuntimeException e) {
-            // Log removed for Docker compatibility
+        } catch (IllegalArgumentException e) {
+            // Error de validación (estado incorrecto, etc.)
             return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            // Error de negocio (tramo no encontrado, camión no existe, etc.)
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            // Log removed for Docker compatibility
+            // Error interno del servidor
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * FASE 4 ALTERNATIVA: PUT /tramos/{id}/camion - Asignar camión (diseño más RESTful)
+     */
+    @PutMapping("/{id}/camion")
+    public ResponseEntity<Tramo> asignarCamionAlternativo(@PathVariable Long id, @RequestBody AsignarCamionRequest request) {
+        try {
+            Tramo tramoAsignado = tramoService.asignarCamion(id, request.getCamionId());
+            return ResponseEntity.ok(tramoAsignado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

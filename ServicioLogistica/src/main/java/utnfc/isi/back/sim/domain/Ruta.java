@@ -2,6 +2,7 @@ package utnfc.isi.back.sim.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
 
@@ -37,8 +38,15 @@ public class Ruta {
     @Column(name = "costo_total_real")
     private Double costoTotalReal;
     
+    @Column(name = "observaciones", length = 500)
+    private String observaciones;
+    
+    @Column(name = "fecha_creacion")
+    private java.time.LocalDateTime fechaCreacion;
+    
     // Relación uno-a-muchos con Tramos
     @OneToMany(mappedBy = "ruta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Evita problemas de serialización con lazy loading
     private List<Tramo> tramos;
     
     // Constructors
@@ -74,6 +82,41 @@ public class Ruta {
     public void setCostoTotalAproximado(Double costoTotalAproximado) { this.costoTotalAproximado = costoTotalAproximado; }
     public void setCostoTotalReal(Double costoTotalReal) { this.costoTotalReal = costoTotalReal; }
     public void setTramos(List<Tramo> tramos) { this.tramos = tramos; }
+    
+    // Getters y Setters para los nuevos campos
+    public String getObservaciones() { return observaciones; }
+    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public java.time.LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(java.time.LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    
+    // Builder simple
+    public static Ruta builder() {
+        return new Ruta();
+    }
+    
+    public Ruta solicitudId(Long solicitudId) {
+        this.solicitudId = solicitudId;
+        return this;
+    }
+    
+    public Ruta estado(EstadoRuta estado) {
+        this.estado = estado;
+        return this;
+    }
+    
+    public Ruta fechaCreacion(java.time.LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+        return this;
+    }
+    
+    public Ruta observaciones(String observaciones) {
+        this.observaciones = observaciones;
+        return this;
+    }
+    
+    public Ruta build() {
+        return this;
+    }
     
     /**
      * Enumeration para los posibles estados de una ruta

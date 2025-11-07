@@ -3,6 +3,8 @@ C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\con
 C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\controller\WelcomeController.java
 C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\domain\Ruta.java
 C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\domain\Tramo.java
+C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\dto\RutaCreacionRequest.java
+C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\dto\RutaCreacionResponse.java
 C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\repository\RutaRepository.java
 C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\repository\TramoRepository.java
 C:\Codigo\TPI-Backend\TPI\ServicioLogistica\src\main\java\utnfc\isi\back\sim\service\RutaService.java

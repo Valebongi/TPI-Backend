@@ -9,19 +9,28 @@ import org.springframework.web.bind.annotation.*;
 import utnfc.isi.back.sim.domain.Contenedor;
 import utnfc.isi.back.sim.domain.Solicitud;
 import utnfc.isi.back.sim.service.SolicitudService;
+import utnfc.isi.back.sim.service.ContenedorService;
+import utnfc.isi.back.sim.dto.AsignarRutaRequest;
+import utnfc.isi.back.sim.dto.CrearSolicitudRequest;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/solicitudes")
 public class SolicitudController {
     
     private final SolicitudService solicitudService;
+    private final ContenedorService contenedorService;
+    private final RestTemplate restTemplate;
 
     @Autowired
-    public SolicitudController(SolicitudService solicitudService) {
+    public SolicitudController(SolicitudService solicitudService, ContenedorService contenedorService, RestTemplate restTemplate) {
         this.solicitudService = solicitudService;
+        this.contenedorService = contenedorService;
+        this.restTemplate = restTemplate;
     }
     
     @GetMapping
@@ -97,15 +106,102 @@ public class SolicitudController {
     }
     
     @PostMapping
-    public ResponseEntity<Solicitud> createSolicitud(@Valid @RequestBody CrearSolicitudRequest request) {
-        // Log removed for Docker compatibility
+    public ResponseEntity<Solicitud> createSolicitud(@RequestBody CrearSolicitudRequest request) {
+        System.out.println("=== CONTROLADOR: Recibida petición POST ===");
+        
+        if (request == null) {
+            System.err.println("Request es NULL");
+            return ResponseEntity.badRequest().build();
+        }
+        
+        System.out.println("Cliente ID: " + request.getClienteId());
+        System.out.println("Contenedor ID: " + request.getContenedorId());
+        System.out.println("Dirección destino: " + request.getDireccionDestino());
         
         try {
-            Solicitud nuevaSolicitud = solicitudService.crearSolicitud(request.getClienteId(), request.getContenedor());
+            Solicitud nuevaSolicitud = solicitudService.crearSolicitud(
+                request.getClienteId(), 
+                request.getContenedorId(),
+                request.getDireccionDestino(),
+                request.getLatitudDestino(),
+                request.getLongitudDestino()
+            );
+            System.out.println("=== CONTROLADOR: Solicitud creada exitosamente con ID: " + nuevaSolicitud.getId() + " ===");
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaSolicitud);
         } catch (IllegalArgumentException e) {
-            // Log removed for Docker compatibility
+            System.err.println("=== CONTROLADOR: Error de validación ===");
+            System.err.println("Error: " + e.getMessage());
             return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.err.println("=== CONTROLADOR: Error interno ===");
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    // ENDPOINT DE PRUEBA: Comunicación aislada con Administración
+    @GetMapping("/test-comunicacion/{contenedorId}")
+    public ResponseEntity<TestComunicacionResponse> testComunicacion(@PathVariable Integer contenedorId) {
+        System.out.println("=== TEST COMUNICACION: Iniciando prueba para contenedor ID: " + contenedorId + " ===");
+        
+        try {
+            // Paso 1: Buscar contenedor
+            Contenedor contenedor = contenedorService.findById(contenedorId.longValue())
+                    .orElse(null);
+                    
+            if (contenedor == null) {
+                System.out.println("=== TEST: Contenedor no encontrado ===");
+                return ResponseEntity.notFound().build();
+            }
+            
+            System.out.println("=== TEST: Contenedor encontrado - Deposito ID: " + contenedor.getIdDeposito() + " ===");
+            
+            // Paso 2: Llamar a servicio de administración
+            String url = "http://tpi-api-gateway:8080/api/admin/depositos/" + 
+                        contenedor.getIdDeposito() + "/coordenadas";
+            System.out.println("=== TEST: Llamando a URL: " + url + " ===");
+            
+            ResponseEntity<CoordenadasResponse> response = restTemplate.getForEntity(url, CoordenadasResponse.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                CoordenadasResponse coordenadas = response.getBody();
+                System.out.println("=== TEST: Respuesta exitosa - " +
+                                 "Dir: " + coordenadas.getDireccion() + 
+                                 ", Lat: " + coordenadas.getLatitud() + 
+                                 ", Lng: " + coordenadas.getLongitud() + " ===");
+                
+                TestComunicacionResponse testResponse = new TestComunicacionResponse(
+                    contenedorId,
+                    contenedor.getIdDeposito(),
+                    coordenadas.getDireccion(),
+                    coordenadas.getLatitud(),
+                    coordenadas.getLongitud(),
+                    "SUCCESS",
+                    "Comunicación exitosa"
+                );
+                
+                return ResponseEntity.ok(testResponse);
+            } else {
+                System.out.println("=== TEST: Respuesta vacía o error ===");
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            }
+            
+        } catch (Exception e) {
+            System.out.println("=== TEST: ERROR en comunicación: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            
+            TestComunicacionResponse errorResponse = new TestComunicacionResponse(
+                contenedorId,
+                null,
+                null,
+                null,
+                null,
+                "ERROR",
+                e.getMessage()
+            );
+            
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
         }
     }
     
@@ -132,6 +228,25 @@ public class SolicitudController {
         } catch (IllegalArgumentException e) {
             // Log removed for Docker compatibility
             return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    /**
+     * FASE 3: Asignar ruta elegida a una solicitud y cambiar estado a PROGRAMADA
+     */
+    @PostMapping("/{id}/asignar-ruta")
+    public ResponseEntity<Solicitud> asignarRuta(@PathVariable Long id, @Valid @RequestBody AsignarRutaRequest rutaRequest) {
+        // Log removed for Docker compatibility
+        
+        try {
+            Solicitud solicitudActualizada = solicitudService.asignarRuta(id, rutaRequest);
+            return ResponseEntity.ok(solicitudActualizada);
+        } catch (IllegalArgumentException e) {
+            // Log removed for Docker compatibility
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            // Log removed for Docker compatibility
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
@@ -268,23 +383,83 @@ public class SolicitudController {
         public void setTotalCanceladas(Long totalCanceladas) { this.totalCanceladas = totalCanceladas; }
     }
     
-    public static class CrearSolicitudRequest {
-        @Valid
-        private Long clienteId;
-        @Valid
-        private Contenedor contenedor;
-
-        public CrearSolicitudRequest() {}
-
-        public CrearSolicitudRequest(Long clienteId, Contenedor contenedor) {
-            this.clienteId = clienteId;
-            this.contenedor = contenedor;
+    // DTO para test de comunicación
+    public static class TestComunicacionResponse {
+        private Integer contenedorId;
+        private Integer depositoId;
+        private String direccionDeposito;
+        private java.math.BigDecimal latitudDeposito;
+        private java.math.BigDecimal longitudDeposito;
+        private String status;
+        private String mensaje;
+        
+        public TestComunicacionResponse() {}
+        
+        public TestComunicacionResponse(Integer contenedorId, Integer depositoId, 
+                                       String direccionDeposito, java.math.BigDecimal latitudDeposito, 
+                                       java.math.BigDecimal longitudDeposito, String status, String mensaje) {
+            this.contenedorId = contenedorId;
+            this.depositoId = depositoId;
+            this.direccionDeposito = direccionDeposito;
+            this.latitudDeposito = latitudDeposito;
+            this.longitudDeposito = longitudDeposito;
+            this.status = status;
+            this.mensaje = mensaje;
         }
-
-        // Getters and Setters
-        public Long getClienteId() { return clienteId; }
-        public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
-        public Contenedor getContenedor() { return contenedor; }
-        public void setContenedor(Contenedor contenedor) { this.contenedor = contenedor; }
+        
+        // Getters y Setters
+        public Integer getContenedorId() { return contenedorId; }
+        public void setContenedorId(Integer contenedorId) { this.contenedorId = contenedorId; }
+        
+        public Integer getDepositoId() { return depositoId; }
+        public void setDepositoId(Integer depositoId) { this.depositoId = depositoId; }
+        
+        public String getDireccionDeposito() { return direccionDeposito; }
+        public void setDireccionDeposito(String direccionDeposito) { this.direccionDeposito = direccionDeposito; }
+        
+        public java.math.BigDecimal getLatitudDeposito() { return latitudDeposito; }
+        public void setLatitudDeposito(java.math.BigDecimal latitudDeposito) { this.latitudDeposito = latitudDeposito; }
+        
+        public java.math.BigDecimal getLongitudDeposito() { return longitudDeposito; }
+        public void setLongitudDeposito(java.math.BigDecimal longitudDeposito) { this.longitudDeposito = longitudDeposito; }
+        
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+        
+        public String getMensaje() { return mensaje; }
+        public void setMensaje(String mensaje) { this.mensaje = mensaje; }
+    }
+    
+    // DTO para coordenadas (debe coincidir con el del servicio de administración)
+    public static class CoordenadasResponse {
+        private Integer id;
+        private String direccion;
+        private java.math.BigDecimal latitud;
+        private java.math.BigDecimal longitud;
+        
+        public CoordenadasResponse() {}
+        
+        // Getters y Setters
+        public Integer getId() { return id; }
+        public void setId(Integer id) { this.id = id; }
+        
+        public String getDireccion() { return direccion; }
+        public void setDireccion(String direccion) { this.direccion = direccion; }
+        
+        public java.math.BigDecimal getLatitud() { return latitud; }
+        public void setLatitud(java.math.BigDecimal latitud) { this.latitud = latitud; }
+        
+        public java.math.BigDecimal getLongitud() { return longitud; }
+        public void setLongitud(java.math.BigDecimal longitud) { this.longitud = longitud; }
+        
+        @Override
+        public String toString() {
+            return "CoordenadasResponse{" +
+                   "id=" + id +
+                   ", direccion='" + direccion + '\'' +
+                   ", latitud=" + latitud +
+                   ", longitud=" + longitud +
+                   '}';
+        }
     }
 }

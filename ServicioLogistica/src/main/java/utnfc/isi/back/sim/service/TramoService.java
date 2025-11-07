@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import utnfc.isi.back.sim.domain.Tramo;
 import utnfc.isi.back.sim.repository.TramoRepository;
+import utnfc.isi.back.sim.client.AdministracionClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,10 +20,13 @@ import java.util.Optional;
 public class TramoService {
     
     private final TramoRepository tramoRepository;
+    // Comentado temporalmente para evitar problemas de inyección
+    // private final AdministracionClient administracionClient;
 
     @Autowired
     public TramoService(TramoRepository tramoRepository) {
         this.tramoRepository = tramoRepository;
+        // this.administracionClient = administracionClient;
     }
     
     /**
@@ -140,18 +144,27 @@ public class TramoService {
     }
     
     /**
-     * Asigna un tramo a un camión
+     * FASE 4: Asigna un tramo a un camión (versión simplificada)
+     * Simplificada temporalmente para bypass de validación
      */
     public Tramo asignarCamion(Long tramoId, Long camionId) {
         // Log removed for Docker compatibility
         
-        return tramoRepository.findById(tramoId)
-                .map(tramo -> {
-                    tramo.setCamionId(camionId);
-                    tramo.setEstado(Tramo.EstadoTramo.ASIGNADO);
-                    return tramoRepository.save(tramo);
-                })
+        // Validar que el tramo existe
+        Tramo tramo = tramoRepository.findById(tramoId)
                 .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + tramoId));
+        
+        // Validar que el tramo esté en estado PENDIENTE
+        if (!Tramo.EstadoTramo.PENDIENTE.equals(tramo.getEstado())) {
+            throw new IllegalArgumentException("Solo se pueden asignar camiones a tramos en estado PENDIENTE");
+        }
+        
+        // Asignar el camión al tramo (versión simplificada sin validación externa)
+        // TODO: Reactivar validación con ServicioAdministracion una vez que la comunicación funcione
+        tramo.setCamionId(camionId);
+        tramo.setEstado(Tramo.EstadoTramo.ASIGNADO);
+        
+        return tramoRepository.save(tramo);
     }
     
     /**

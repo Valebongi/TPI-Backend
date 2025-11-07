@@ -18,6 +18,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+# Configuración de microservicios
+servicio:
+  administracion:
+    url: http://servicio-administracion:8080
+
 # Configuración de Swagger/OpenAPI
 springdoc:
   swagger-ui:

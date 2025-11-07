@@ -1,0 +1,9 @@
+{
+  "nombre": "Juan Carlos",
+  "apellido": "Rodriguez",
+  "email": "juan.rodriguez@email.com",
+  "telefono": "+54-11-1234-5678",
+  "direccion": "Av. Corrientes 1234, CABA",
+  "keycloakId": null,
+  "activo": true
+}

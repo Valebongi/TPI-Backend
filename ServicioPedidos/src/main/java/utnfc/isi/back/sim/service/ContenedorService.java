@@ -94,12 +94,7 @@ public class ContenedorService {
                     contenedor.setVolumen(contenedorActualizado.getVolumen());
                     contenedor.setEstado(contenedorActualizado.getEstado());
                     contenedor.setDescripcion(contenedorActualizado.getDescripcion());
-                    contenedor.setDireccionOrigen(contenedorActualizado.getDireccionOrigen());
-                    contenedor.setLatitudOrigen(contenedorActualizado.getLatitudOrigen());
-                    contenedor.setLongitudOrigen(contenedorActualizado.getLongitudOrigen());
-                    contenedor.setDireccionDestino(contenedorActualizado.getDireccionDestino());
-                    contenedor.setLatitudDestino(contenedorActualizado.getLatitudDestino());
-                    contenedor.setLongitudDestino(contenedorActualizado.getLongitudDestino());
+                    contenedor.setIdDeposito(contenedorActualizado.getIdDeposito());
                     
                     return contenedorRepository.save(contenedor);
                 })
