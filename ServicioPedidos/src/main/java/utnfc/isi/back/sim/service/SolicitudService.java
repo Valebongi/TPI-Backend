@@ -197,6 +197,23 @@ public class SolicitudService {
                 .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada con ID: " + id));
     }
     
+    /**
+     * Actualiza el costo final de una solicitud
+     * Método utilizado por el servicio de logística cuando se completan todos los tramos
+     */
+    public Solicitud actualizarCostoFinal(Long id, java.math.BigDecimal costoFinal) {
+        // Log removed for Docker compatibility
+        
+        return solicitudRepository.findById(id)
+                .map(solicitud -> {
+                    solicitud.setCostoFinal(costoFinal);
+                    
+                    // Log removed for Docker compatibility
+                    return solicitudRepository.save(solicitud);
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada con ID: " + id));
+    }
+    
     public Solicitud update(Long id, Solicitud solicitudActualizada) {
         // Log removed for Docker compatibility
         

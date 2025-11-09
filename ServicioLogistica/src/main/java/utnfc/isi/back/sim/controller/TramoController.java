@@ -213,6 +213,24 @@ public class TramoController {
     }
     
     /**
+     * NUEVO: PUT /tramos/{id}/finalizar-automatico - Finalizar tramo con cálculo automático de costo
+     * No requiere parámetro costoReal, lo calcula automáticamente
+     */
+    @PutMapping("/{id}/finalizar-automatico")
+    public ResponseEntity<Tramo> finalizarTramoAutomatico(@PathVariable Long id) {
+        try {
+            Tramo tramoFinalizado = tramoService.finalizarTramoAutomatico(id);
+            return ResponseEntity.ok(tramoFinalizado);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * PUT /tramos/{id}/estado - Actualizar estado de tramo
      */
     @PutMapping("/{id}/estado")

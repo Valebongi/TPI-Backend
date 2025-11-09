@@ -240,14 +240,20 @@ public class PedidosClient {
             System.out.println("=== PEDIDOS CLIENT: Marcando solicitud " + solicitudId + " como ENTREGADA ===");
             System.out.println("=== PEDIDOS CLIENT: Costo final real: $" + costoFinalReal + " ===");
             
-            // Primero actualizar el estado a ENTREGADA
-            boolean estadoActualizado = actualizarEstadoSolicitud(solicitudId, "ENTREGADA");
+            // Usar el nuevo endpoint específico para marcar como entregada
+            boolean actualizado = marcarSolicitudComoEntregada(solicitudId);
             
-            if (estadoActualizado) {
+            if (actualizado) {
                 System.out.println("=== PEDIDOS CLIENT: ✅ Solicitud " + solicitudId + " marcada como ENTREGADA exitosamente ===");
                 
-                // TODO: Si el ServicioPedidos tiene endpoint para actualizar costo final, agregarlo aquí
-                // Por ahora solo actualizamos el estado
+                // Actualizar el costo final de la solicitud
+                boolean costoActualizado = actualizarCostoFinalSolicitud(solicitudId, costoFinalReal);
+                
+                if (costoActualizado) {
+                    System.out.println("=== PEDIDOS CLIENT: ✅ Costo final actualizado exitosamente ===");
+                } else {
+                    System.out.println("=== PEDIDOS CLIENT: ⚠️ Estado actualizado pero falló actualización de costo final ===");
+                }
                 
                 return true;
             } else {
@@ -258,6 +264,35 @@ public class PedidosClient {
         } catch (Exception e) {
             System.err.println("=== PEDIDOS CLIENT: ❌ Error actualizando solicitud a ENTREGADA: " + e.getMessage() + " ===");
             e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Actualiza el costo final de una solicitud
+     */
+    private boolean actualizarCostoFinalSolicitud(Long solicitudId, Double costoFinal) {
+        try {
+            String url = pedidosServiceUrl + "/solicitudes/" + solicitudId + "/costo-final?costo=" + costoFinal;
+            System.out.println("=== PEDIDOS CLIENT: Actualizando costo final - URL: " + url + " ===");
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.PUT, entity, Object.class);
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("=== PEDIDOS CLIENT: ✅ Costo final actualizado exitosamente ===");
+                return true;
+            } else {
+                System.err.println("=== PEDIDOS CLIENT: ❌ Error al actualizar costo final - Código: " + response.getStatusCode() + " ===");
+                return false;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("=== PEDIDOS CLIENT: ❌ Error actualizando costo final: " + e.getMessage() + " ===");
+            // No es crítico si falla el costo final, el estado ya se actualizó
             return false;
         }
     }

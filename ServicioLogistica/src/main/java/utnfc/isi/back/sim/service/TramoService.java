@@ -22,14 +22,13 @@ public class TramoService {
     
     private final TramoRepository tramoRepository;
     private final PedidosClient pedidosClient;
-    // Comentado temporalmente para evitar problemas de inyección
-    // private final AdministracionClient administracionClient;
+    private final AdministracionClient administracionClient;
 
     @Autowired
-    public TramoService(TramoRepository tramoRepository, PedidosClient pedidosClient) {
+    public TramoService(TramoRepository tramoRepository, PedidosClient pedidosClient, AdministracionClient administracionClient) {
         this.tramoRepository = tramoRepository;
         this.pedidosClient = pedidosClient;
-        // this.administracionClient = administracionClient;
+        this.administracionClient = administracionClient;
     }
     
     /**
@@ -289,6 +288,81 @@ public class TramoService {
         verificarYActualizarSolicitudSiCompleta(tramo.getRuta().getId());
         
         return tramoGuardado;
+    }
+    
+    /**
+     * NUEVO: Finalizar tramo con cálculo automático de costo real
+     * No requiere pasar costoReal manualmente, lo calcula automáticamente
+     */
+    public Tramo finalizarTramoAutomatico(Long tramoId) {
+        System.out.println("=== TRAMO SERVICE: Finalizando tramo automáticamente ID: " + tramoId + " ===");
+        
+        Tramo tramo = tramoRepository.findById(tramoId)
+                .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + tramoId));
+        
+        // Validar estado actual
+        if (tramo.getEstado() != Tramo.EstadoTramo.EN_PROGRESO) {
+            throw new IllegalStateException("El tramo debe estar en progreso para poder finalizarse");
+        }
+        
+        // Validar secuencia: verificar que tramos anteriores estén completados
+        validarSecuenciaTramos(tramo, "finalizacion");
+        
+        // Calcular costo real automáticamente
+        Double costoReal = calcularCostoReal(tramo);
+        
+        LocalDateTime ahora = LocalDateTime.now();
+        tramo.setEstado(Tramo.EstadoTramo.COMPLETADO);
+        tramo.setFechaHoraFin(ahora);
+        tramo.setCostoReal(costoReal);
+        
+        // Calcular tiempo real
+        if (tramo.getFechaHoraInicio() != null) {
+            long minutos = java.time.Duration.between(tramo.getFechaHoraInicio(), ahora).toMinutes();
+            tramo.setTiempoRealMinutos((int) minutos);
+        }
+        
+        Tramo tramoGuardado = tramoRepository.save(tramo);
+        
+        // MEJORA: Verificar si todos los tramos de la ruta están completados
+        verificarYActualizarSolicitudSiCompleta(tramo.getRuta().getId());
+        
+        System.out.println("=== TRAMO SERVICE: Tramo finalizado con costo real calculado: $" + costoReal + " ===");
+        
+        return tramoGuardado;
+    }
+    
+    /**
+     * Calcula el costo real de un tramo basado en distancia, peso del contenedor y camión asignado
+     */
+    private Double calcularCostoReal(Tramo tramo) {
+        try {
+            // Obtener información del contenedor desde la solicitud
+            Long solicitudId = tramo.getRuta().getSolicitudId();
+            PedidosClient.SolicitudResponse solicitud = pedidosClient.obtenerSolicitud(solicitudId);
+            
+            // Extraer peso del contenedor
+            Double pesoKg = solicitud.getContenedor().getPeso() != null ? 
+                    solicitud.getContenedor().getPeso().doubleValue() : 1000.0;
+            
+            // Usar distancia del tramo
+            Double distanciaKm = tramo.getDistanciaKm() != null ? tramo.getDistanciaKm() : 0.0;
+            
+            // Usar camión asignado
+            Long camionId = tramo.getCamionId();
+            
+            // Calcular costo usando el cliente de administración
+            Double costoCalculado = administracionClient.calcularCostoTramo(distanciaKm, pesoKg, camionId);
+            
+            System.out.println("=== CÁLCULO COSTO REAL: Distancia: " + distanciaKm + "km, Peso: " + pesoKg + "kg, Camión: " + camionId + ", Costo: $" + costoCalculado + " ===");
+            
+            return costoCalculado;
+            
+        } catch (Exception e) {
+            System.out.println("=== TRAMO SERVICE: Error calculando costo real, usando costo aproximado: " + e.getMessage() + " ===");
+            // Fallback: usar el costo aproximado si hay error
+            return tramo.getCostoAproximado() != null ? tramo.getCostoAproximado() : 1000.0;
+        }
     }
     
     /**

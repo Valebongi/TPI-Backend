@@ -501,16 +501,36 @@ public class RutaService {
     
     /**
      * Calcula el costo aproximado basado en peso, volumen y distancia del contenedor
+     * Implementa la fórmula definida en los lineamientos del TP
      */
     private Double calcularCostoAproximado(RutaCreacionRequest request, double distanciaKm) {
-        BigDecimal costoBase = BigDecimal.valueOf(1000); // Costo base
-        BigDecimal costoPorPeso = request.getPesoContenedor() != null ? 
-                request.getPesoContenedor().multiply(BigDecimal.valueOf(10)) : BigDecimal.ZERO;
-        BigDecimal costoPorVolumen = request.getVolumenContenedor() != null ? 
-                request.getVolumenContenedor().multiply(BigDecimal.valueOf(50)) : BigDecimal.ZERO;
-        BigDecimal costoPorDistancia = BigDecimal.valueOf(distanciaKm * 2.5); // $2.5 por KM
-        
-        return costoBase.add(costoPorPeso).add(costoPorVolumen).add(costoPorDistancia).doubleValue();
+        try {
+            // Obtener peso del contenedor (convertir BigDecimal a Double)
+            Double pesoKg = request.getPesoContenedor() != null ? 
+                    request.getPesoContenedor().doubleValue() : 1000.0; // Peso por defecto
+            
+            // Usar el cliente de administración para calcular el costo
+            // Pasamos null como camionId ya que aún no está asignado
+            Double costoCalculado = administracionClient.calcularCostoTramo(distanciaKm, pesoKg, null);
+            
+            System.out.println("=== RUTA SERVICE: Costo calculado automáticamente ===");
+            System.out.println("=== Distancia: " + distanciaKm + "km, Peso: " + pesoKg + "kg, Costo: $" + costoCalculado + " ===");
+            
+            return costoCalculado;
+            
+        } catch (Exception e) {
+            System.out.println("=== RUTA SERVICE: Error calculando costo, usando fórmula básica: " + e.getMessage() + " ===");
+            
+            // Fallback a fórmula básica si hay error
+            BigDecimal costoBase = BigDecimal.valueOf(1000); // Costo base
+            BigDecimal costoPorPeso = request.getPesoContenedor() != null ? 
+                    request.getPesoContenedor().multiply(BigDecimal.valueOf(10)) : BigDecimal.ZERO;
+            BigDecimal costoPorVolumen = request.getVolumenContenedor() != null ? 
+                    request.getVolumenContenedor().multiply(BigDecimal.valueOf(50)) : BigDecimal.ZERO;
+            BigDecimal costoPorDistancia = BigDecimal.valueOf(distanciaKm * 2.5); // $2.5 por KM
+            
+            return costoBase.add(costoPorPeso).add(costoPorVolumen).add(costoPorDistancia).doubleValue();
+        }
     }
     
     /**

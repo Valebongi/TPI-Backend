@@ -312,6 +312,23 @@ public class SolicitudController {
         }
     }
     
+    /**
+     * PUT /solicitudes/{id}/costo-final - Actualizar costo final de la solicitud
+     * Endpoint para que el servicio de logística actualice el costo final cuando se completen todos los tramos
+     */
+    @PutMapping("/{id}/costo-final")
+    public ResponseEntity<Solicitud> actualizarCostoFinal(@PathVariable Long id, @RequestParam BigDecimal costo) {
+        // Log removed for Docker compatibility
+        
+        try {
+            Solicitud solicitudActualizada = solicitudService.actualizarCostoFinal(id, costo);
+            return ResponseEntity.ok(solicitudActualizada);
+        } catch (Exception e) {
+            // Log removed for Docker compatibility
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
     // DTOs para las respuestas
     public static class SeguimientoResponse {
         private Long solicitudId;
