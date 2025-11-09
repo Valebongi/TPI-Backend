@@ -43,7 +43,7 @@ public class Tramo {
     
     @Column(name = "estado")
     @Enumerated(EnumType.STRING)
-    private EstadoTramo estado = EstadoTramo.PENDIENTE;
+    private EstadoTramo estado = EstadoTramo.ESTIMADO;
     
     @Column(name = "costo_aproximado")
     private Double costoAproximado;
@@ -210,10 +210,11 @@ public class Tramo {
      * Enumeration para los estados del tramo
      */
     public enum EstadoTramo {
-        PENDIENTE,
-        ASIGNADO,
-        EN_PROGRESO,
-        COMPLETADO,
-        CANCELADO
+        ESTIMADO,    // Fase 3: Tramo creado automáticamente, aún sin camión asignado
+        PENDIENTE,   // Fase 4: Esperando asignación de camión
+        ASIGNADO,    // Fase 4: Camión asignado, listo para ejecutar
+        EN_PROGRESO, // Fase 5: Transportista inició el tramo (EN_CURSO)
+        COMPLETADO,  // Fase 5: Transportista finalizó el tramo
+        CANCELADO    // Estado especial: tramo cancelado
     }
 }

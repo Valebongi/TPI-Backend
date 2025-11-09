@@ -21,6 +21,16 @@ public interface TramoRepository extends JpaRepository<Tramo, Long> {
     List<Tramo> findByRutaIdOrderById(Long rutaId);
     
     /**
+     * Encuentra todos los tramos de una ruta específica ordenados por número
+     */
+    List<Tramo> findByRutaIdOrderByNumero(Long rutaId);
+    
+    /**
+     * Encuentra todos los tramos de una ruta específica
+     */
+    List<Tramo> findByRutaId(Long rutaId);
+    
+    /**
      * Encuentra tramos por estado
      */
     List<Tramo> findByEstado(Tramo.EstadoTramo estado);
@@ -52,8 +62,8 @@ public interface TramoRepository extends JpaRepository<Tramo, Long> {
     long countByCamionIdAndEstado(Long camionId, Tramo.EstadoTramo estado);
     
     /**
-     * Encuentra tramos pendientes de asignación
+     * Encuentra tramos pendientes de asignación (estado ESTIMADO)
      */
-    @Query("SELECT t FROM Tramo t WHERE t.camionId IS NULL AND t.estado = 'PENDIENTE'")
+    @Query("SELECT t FROM Tramo t WHERE t.camionId IS NULL AND t.estado = 'ESTIMADO'")
     List<Tramo> findTramosPendientesDeAsignacion();
 }

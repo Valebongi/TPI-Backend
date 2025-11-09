@@ -228,4 +228,68 @@ public class PedidosClient {
         public String getObservaciones() { return observaciones; }
         public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
     }
+    
+    /**
+     * MEJORA: Actualiza una solicitud a estado ENTREGADA cuando todos sus tramos están completados
+     * @param solicitudId ID de la solicitud a actualizar
+     * @param costoFinalReal Costo total real de todos los tramos
+     * @return true si la actualización fue exitosa, false en caso contrario
+     */
+    public boolean actualizarSolicitudAEntregada(Long solicitudId, Double costoFinalReal) {
+        try {
+            System.out.println("=== PEDIDOS CLIENT: Marcando solicitud " + solicitudId + " como ENTREGADA ===");
+            System.out.println("=== PEDIDOS CLIENT: Costo final real: $" + costoFinalReal + " ===");
+            
+            // Primero actualizar el estado a ENTREGADA
+            boolean estadoActualizado = actualizarEstadoSolicitud(solicitudId, "ENTREGADA");
+            
+            if (estadoActualizado) {
+                System.out.println("=== PEDIDOS CLIENT: ✅ Solicitud " + solicitudId + " marcada como ENTREGADA exitosamente ===");
+                
+                // TODO: Si el ServicioPedidos tiene endpoint para actualizar costo final, agregarlo aquí
+                // Por ahora solo actualizamos el estado
+                
+                return true;
+            } else {
+                System.err.println("=== PEDIDOS CLIENT: ❌ Error al actualizar estado de solicitud " + solicitudId + " ===");
+                return false;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("=== PEDIDOS CLIENT: ❌ Error actualizando solicitud a ENTREGADA: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Marca una solicitud como entregada usando el endpoint específico
+     * @param solicitudId ID de la solicitud a marcar como entregada
+     * @return true si fue exitoso, false en caso contrario
+     */
+    public boolean marcarSolicitudComoEntregada(Long solicitudId) {
+        try {
+            String url = pedidosServiceUrl + "/solicitudes/" + solicitudId + "/marcar-entregada";
+            System.out.println("=== PEDIDOS CLIENT: Marcando solicitud como entregada - URL: " + url + " ===");
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.PUT, entity, Object.class);
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("=== PEDIDOS CLIENT: ✅ Solicitud " + solicitudId + " marcada como entregada exitosamente ===");
+                return true;
+            } else {
+                System.err.println("=== PEDIDOS CLIENT: ❌ Error al marcar solicitud como entregada - Código: " + response.getStatusCode() + " ===");
+                return false;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("=== PEDIDOS CLIENT: ❌ Error marcando solicitud como entregada: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

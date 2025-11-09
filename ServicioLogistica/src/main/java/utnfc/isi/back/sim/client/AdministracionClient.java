@@ -19,7 +19,7 @@ public class AdministracionClient {
     private final String administracionServiceUrl;
 
     public AdministracionClient(RestTemplate restTemplate, 
-                              @Value("${servicio.administracion.url:http://localhost:8080/api/admin}") String administracionServiceUrl) {
+                              @Value("${servicio.administracion.url:http://servicio-administracion:8080}") String administracionServiceUrl) {
         this.restTemplate = restTemplate;
         this.administracionServiceUrl = administracionServiceUrl;
     }
@@ -48,6 +48,20 @@ public class AdministracionClient {
             return response.getBody();
         } catch (Exception e) {
             throw new RuntimeException("Error al obtener el camión: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Obtiene todos los depósitos disponibles
+     */
+    public DepositoResponse[] obtenerDepositos() {
+        try {
+            String url = administracionServiceUrl + "/depositos";
+            ResponseEntity<DepositoResponse[]> response = restTemplate.getForEntity(url, DepositoResponse[].class);
+            return response.getBody();
+        } catch (Exception e) {
+            System.out.println("=== ADMIN CLIENT: Error al obtener depósitos: " + e.getMessage() + " ===");
+            return new DepositoResponse[0];
         }
     }
 }

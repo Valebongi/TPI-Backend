@@ -179,6 +179,40 @@ public class TramoController {
     }
     
     /**
+     * MEJORA: PUT /tramos/{id}/iniciar-validado - Iniciar tramo con validación de secuencia
+     */
+    @PutMapping("/{id}/iniciar-validado")
+    public ResponseEntity<Tramo> iniciarTramoConValidacion(@PathVariable Long id) {
+        try {
+            Tramo tramoIniciado = tramoService.iniciarTramoConValidacion(id);
+            return ResponseEntity.ok(tramoIniciado);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * MEJORA: PUT /tramos/{id}/finalizar-validado - Finalizar tramo con validación y actualización automática
+     */
+    @PutMapping("/{id}/finalizar-validado")
+    public ResponseEntity<Tramo> finalizarTramoConValidacion(@PathVariable Long id, @RequestParam Double costoReal) {
+        try {
+            Tramo tramoFinalizado = tramoService.finalizarTramoConValidacion(id, costoReal);
+            return ResponseEntity.ok(tramoFinalizado);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * PUT /tramos/{id}/estado - Actualizar estado de tramo
      */
     @PutMapping("/{id}/estado")
@@ -214,6 +248,41 @@ public class TramoController {
     }
     
     /**
+     * GET /tramos/ruta/{rutaId} - Consultar todos los tramos de una ruta
+     */
+    @GetMapping("/ruta/{rutaId}")
+    public ResponseEntity<List<Tramo>> consultarTramosPorRuta(@PathVariable Long rutaId) {
+        try {
+            List<Tramo> tramos = tramoService.findByRutaIdOrderByNumero(rutaId);
+            return ResponseEntity.ok(tramos);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * GET /tramos/ruta/{rutaId}/estado - Verificar si una ruta está completada
+     */
+    @GetMapping("/ruta/{rutaId}/estado")
+    public ResponseEntity<RutaEstadoResponse> verificarEstadoRuta(@PathVariable Long rutaId) {
+        try {
+            List<Tramo> tramos = tramoService.findByRutaIdOrderByNumero(rutaId);
+            boolean completada = tramoService.esRutaCompletada(rutaId);
+            
+            RutaEstadoResponse response = new RutaEstadoResponse();
+            response.setRutaId(rutaId);
+            response.setTotalTramos(tramos.size());
+            response.setTramosCompletados((int) tramos.stream().filter(t -> t.getEstado() == Tramo.EstadoTramo.COMPLETADO).count());
+            response.setCompletada(completada);
+            response.setTramos(tramos);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * DELETE /tramos/{id} - Eliminar tramo
      */
     @DeleteMapping("/{id}")
@@ -230,5 +299,28 @@ public class TramoController {
             // Log removed for Docker compatibility
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+    
+    /**
+     * DTO para respuesta del estado de ruta
+     */
+    public static class RutaEstadoResponse {
+        private Long rutaId;
+        private Integer totalTramos;
+        private Integer tramosCompletados;
+        private Boolean completada;
+        private List<Tramo> tramos;
+        
+        // Getters y Setters
+        public Long getRutaId() { return rutaId; }
+        public void setRutaId(Long rutaId) { this.rutaId = rutaId; }
+        public Integer getTotalTramos() { return totalTramos; }
+        public void setTotalTramos(Integer totalTramos) { this.totalTramos = totalTramos; }
+        public Integer getTramosCompletados() { return tramosCompletados; }
+        public void setTramosCompletados(Integer tramosCompletados) { this.tramosCompletados = tramosCompletados; }
+        public Boolean getCompletada() { return completada; }
+        public void setCompletada(Boolean completada) { this.completada = completada; }
+        public List<Tramo> getTramos() { return tramos; }
+        public void setTramos(List<Tramo> tramos) { this.tramos = tramos; }
     }
 }

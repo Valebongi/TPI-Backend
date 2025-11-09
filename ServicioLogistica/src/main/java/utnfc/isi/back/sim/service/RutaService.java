@@ -10,12 +10,17 @@ import utnfc.isi.back.sim.dto.RutaCreacionRequest;
 import utnfc.isi.back.sim.dto.RutaTentativa;
 import utnfc.isi.back.sim.dto.TramoTentativo;
 import utnfc.isi.back.sim.client.PedidosClient;
+import utnfc.isi.back.sim.client.GeolocalizacionClient;
+import utnfc.isi.back.sim.client.AdministracionClient;
+import utnfc.isi.back.sim.client.DepositoResponse;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * Servicio de negocio para la gestión de rutas
@@ -28,12 +33,21 @@ public class RutaService {
     private final RutaRepository rutaRepository;
     private final TramoService tramoService;
     private final PedidosClient pedidosClient;
+    private final GeolocalizacionClient geolocalizacionClient;
+    private final AdministracionClient administracionClient;
+    
+    // Constante para el límite máximo de kilómetros por tramo
+    private static final double MAX_KM_POR_TRAMO = 500.0;
 
     @Autowired
-    public RutaService(RutaRepository rutaRepository, TramoService tramoService, PedidosClient pedidosClient) {
+    public RutaService(RutaRepository rutaRepository, TramoService tramoService, 
+                      PedidosClient pedidosClient, GeolocalizacionClient geolocalizacionClient,
+                      AdministracionClient administracionClient) {
         this.rutaRepository = rutaRepository;
         this.tramoService = tramoService;
         this.pedidosClient = pedidosClient;
+        this.geolocalizacionClient = geolocalizacionClient;
+        this.administracionClient = administracionClient;
     }
     
     /**
@@ -273,31 +287,57 @@ public class RutaService {
 
     /**
      * Crea tramos automáticamente para una ruta basándose en el origen y destino
+     * NUEVA LÓGICA: Divide en múltiples tramos si supera 500KM usando depósitos intermedios
      */
     private void crearTramosAutomaticos(Ruta ruta, RutaCreacionRequest request) {
-        // Crear un tramo principal desde origen hasta destino
-        // En una implementación real, aquí se podría integrar con APIs de mapas para calcular rutas óptimas
+        System.out.println("=== RUTA SERVICE: Creando tramos automáticos para ruta ID: " + ruta.getId() + " ===");
         
-        Tramo tramo = Tramo.builder()
-                .ruta(ruta)
-                .numero(1)
-                .tipo(Tramo.TipoTramo.ENTREGA)
-                .estado(Tramo.EstadoTramo.PENDIENTE)
-                .origenCoordenadas(request.getOrigenCoordenadas())
-                .destinoCoordenadas(request.getDestinoCoordenadas())
-                .origenDescripcion(request.getOrigenDescripcion())
-                .destinoDescripcion(request.getDestinoDescripcion())
-                .fechaCreacion(LocalDateTime.now())
-                .build();
+        try {
+            // 1. Calcular distancia total usando el servicio de geolocalización
+            GeolocalizacionClient.DistanciaResponse distanciaTotal = geolocalizacionClient.calcularDistancia(
+                request.getOrigenCoordenadas(), 
+                request.getDestinoCoordenadas()
+            );
+            
+            double kmTotales = distanciaTotal.getKilometros();
+            System.out.println("=== RUTA SERVICE: Distancia total calculada: " + kmTotales + " KM ===");
+            
+            // 2. Decidir si necesitamos dividir la ruta
+            if (kmTotales <= MAX_KM_POR_TRAMO) {
+                // Crear un solo tramo directo
+                System.out.println("=== RUTA SERVICE: Distancia menor a " + MAX_KM_POR_TRAMO + "KM, creando tramo único ===");
+                crearTramoUnico(ruta, request, kmTotales, distanciaTotal.getDuracionTexto());
+            } else {
+                // Dividir en múltiples tramos usando depósitos
+                System.out.println("=== RUTA SERVICE: Distancia mayor a " + MAX_KM_POR_TRAMO + "KM, dividiendo en tramos múltiples ===");
+                crearTramosMultiples(ruta, request, kmTotales);
+            }
+            
+        } catch (Exception e) {
+            System.out.println("=== RUTA SERVICE: Error al crear tramos automáticos: " + e.getMessage() + " ===");
+            // Fallback: crear tramo único si hay error
+            crearTramoUnico(ruta, request, 0.0, "Estimado");
+        }
+    }
+    
+    /**
+     * Crea un solo tramo directo cuando la distancia es menor a 500KM
+     */
+    private void crearTramoUnico(Ruta ruta, RutaCreacionRequest request, double distanciaKm, String duracionTexto) {
+        Tramo tramo = new Tramo();
+        tramo.setRuta(ruta);
+        tramo.setNumero(1);
+        tramo.setTipo(Tramo.TipoTramo.ENTREGA);
+        tramo.setEstado(Tramo.EstadoTramo.ESTIMADO); // Estado correcto según secuencia
+        tramo.setOrigenCoordenadas(request.getOrigenCoordenadas());
+        tramo.setDestinoCoordenadas(request.getDestinoCoordenadas());
+        tramo.setOrigenDescripcion(request.getOrigenDescripcion());
+        tramo.setDestinoDescripcion(request.getDestinoDescripcion());
+        tramo.setDistanciaKm(distanciaKm);
+        tramo.setFechaCreacion(LocalDateTime.now());
         
-        // Calcular costo aproximado basado en peso y volumen del contenedor
-        BigDecimal costoBase = BigDecimal.valueOf(1000); // Costo base
-        BigDecimal costoPorPeso = request.getPesoContenedor() != null ? 
-                request.getPesoContenedor().multiply(BigDecimal.valueOf(10)) : BigDecimal.ZERO;
-        BigDecimal costoPorVolumen = request.getVolumenContenedor() != null ? 
-                request.getVolumenContenedor().multiply(BigDecimal.valueOf(50)) : BigDecimal.ZERO;
-        
-        Double costoAproximado = costoBase.add(costoPorPeso).add(costoPorVolumen).doubleValue();
+        // Calcular costo aproximado
+        Double costoAproximado = calcularCostoAproximado(request, distanciaKm);
         tramo.setCostoAproximado(costoAproximado);
         
         // Guardar el tramo
@@ -305,7 +345,172 @@ public class RutaService {
         
         // Actualizar la cantidad de tramos en la ruta
         ruta.setCantidadTramos(1);
+        ruta.setCantidadDepositos(0);
         rutaRepository.save(ruta);
+        
+        System.out.println("=== RUTA SERVICE: Tramo único creado - Distancia: " + distanciaKm + "KM, Costo: " + costoAproximado + " ===");
+    }
+    
+    /**
+     * Crea múltiples tramos cuando la distancia supera 500KM
+     * Busca depósitos intermedios para dividir la ruta
+     */
+    private void crearTramosMultiples(Ruta ruta, RutaCreacionRequest request, double distanciaTotalKm) {
+        // Obtener todos los depósitos disponibles
+        DepositoResponse[] depositos = administracionClient.obtenerDepositos();
+        System.out.println("=== RUTA SERVICE: Obtenidos " + depositos.length + " depósitos disponibles ===");
+        
+        if (depositos.length == 0) {
+            System.out.println("=== RUTA SERVICE: Sin depósitos disponibles, creando tramo único ===");
+            crearTramoUnico(ruta, request, distanciaTotalKm, "Estimado");
+            return;
+        }
+        
+        // Calcular cuántos tramos necesitamos aproximadamente
+        int tramosNecesarios = (int) Math.ceil(distanciaTotalKm / MAX_KM_POR_TRAMO);
+        System.out.println("=== RUTA SERVICE: Tramos necesarios aproximados: " + tramosNecesarios + " ===");
+        
+        // Buscar el mejor depósito intermedio (más cercano al punto medio de la ruta)
+        DepositoResponse mejorDeposito = encontrarMejorDepositoIntermedio(
+            request.getOrigenCoordenadas(), 
+            request.getDestinoCoordenadas(), 
+            depositos
+        );
+        
+        if (mejorDeposito == null) {
+            System.out.println("=== RUTA SERVICE: No se encontró depósito intermedio adecuado, creando tramo único ===");
+            crearTramoUnico(ruta, request, distanciaTotalKm, "Estimado");
+            return;
+        }
+        
+        System.out.println("=== RUTA SERVICE: Usando depósito intermedio: " + mejorDeposito.getNombre() + " ===");
+        
+        // Crear primer tramo: Origen -> Depósito
+        crearTramoConDestino(ruta, 1, Tramo.TipoTramo.TRANSPORTE, 
+            request.getOrigenCoordenadas(), mejorDeposito.getCoordenadas(),
+            request.getOrigenDescripcion(), mejorDeposito.getNombre(),
+            request);
+        
+        // Crear segundo tramo: Depósito -> Destino
+        crearTramoConDestino(ruta, 2, Tramo.TipoTramo.ENTREGA,
+            mejorDeposito.getCoordenadas(), request.getDestinoCoordenadas(),
+            mejorDeposito.getNombre(), request.getDestinoDescripcion(),
+            request);
+        
+        // Actualizar la ruta
+        ruta.setCantidadTramos(2);
+        ruta.setCantidadDepositos(1);
+        rutaRepository.save(ruta);
+        
+        System.out.println("=== RUTA SERVICE: Creados 2 tramos usando depósito intermedio ===");
+    }
+    
+    /**
+     * Encuentra el mejor depósito intermedio para dividir una ruta
+     */
+    private DepositoResponse encontrarMejorDepositoIntermedio(String origen, String destino, DepositoResponse[] depositos) {
+        // Por simplicidad, elegimos el depósito que esté más cerca del punto medio geográfico
+        String[] coordsOrigen = origen.split(",");
+        String[] coordsDestino = destino.split(",");
+        
+        double latOrigen = Double.parseDouble(coordsOrigen[0]);
+        double lngOrigen = Double.parseDouble(coordsOrigen[1]);
+        double latDestino = Double.parseDouble(coordsDestino[0]);
+        double lngDestino = Double.parseDouble(coordsDestino[1]);
+        
+        // Calcular punto medio
+        double latMedio = (latOrigen + latDestino) / 2;
+        double lngMedio = (lngOrigen + lngDestino) / 2;
+        
+        DepositoResponse mejorDeposito = null;
+        double menorDistancia = Double.MAX_VALUE;
+        
+        for (DepositoResponse deposito : depositos) {
+            double latDeposito = deposito.getLatitud().doubleValue();
+            double lngDeposito = deposito.getLongitud().doubleValue();
+            
+            // Calcular distancia euclidiana simple al punto medio
+            double distancia = Math.sqrt(
+                Math.pow(latDeposito - latMedio, 2) + Math.pow(lngDeposito - lngMedio, 2)
+            );
+            
+            if (distancia < menorDistancia) {
+                menorDistancia = distancia;
+                mejorDeposito = deposito;
+            }
+        }
+        
+        return mejorDeposito;
+    }
+    
+    /**
+     * Crea un tramo específico con origen y destino dados
+     */
+    private void crearTramoConDestino(Ruta ruta, int numero, Tramo.TipoTramo tipo, 
+                                     String origenCoords, String destinoCoords, 
+                                     String origenDesc, String destinoDesc,
+                                     RutaCreacionRequest request) {
+        try {
+            // Calcular distancia específica para este tramo
+            GeolocalizacionClient.DistanciaResponse distanciaTramo = geolocalizacionClient.calcularDistancia(
+                origenCoords, destinoCoords
+            );
+            
+            Tramo tramo = new Tramo();
+            tramo.setRuta(ruta);
+            tramo.setNumero(numero);
+            tramo.setTipo(tipo);
+            tramo.setEstado(Tramo.EstadoTramo.ESTIMADO); // Estado correcto según secuencia
+            tramo.setOrigenCoordenadas(origenCoords);
+            tramo.setDestinoCoordenadas(destinoCoords);
+            tramo.setOrigenDescripcion(origenDesc);
+            tramo.setDestinoDescripcion(destinoDesc);
+            tramo.setDistanciaKm(distanciaTramo.getKilometros());
+            tramo.setFechaCreacion(LocalDateTime.now());
+            
+            // Calcular costo proporcional
+            Double costoAproximado = calcularCostoAproximado(request, distanciaTramo.getKilometros());
+            tramo.setCostoAproximado(costoAproximado);
+            
+            // Guardar el tramo
+            tramoService.save(tramo);
+            
+            System.out.println("=== RUTA SERVICE: Tramo " + numero + " creado - " + origenDesc + " -> " + destinoDesc + 
+                             " (" + distanciaTramo.getKilometros() + "KM) ===");
+            
+        } catch (Exception e) {
+            System.out.println("=== RUTA SERVICE: Error al crear tramo " + numero + ": " + e.getMessage() + " ===");
+            // Crear tramo sin distancia calculada
+            Tramo tramo = new Tramo();
+            tramo.setRuta(ruta);
+            tramo.setNumero(numero);
+            tramo.setTipo(tipo);
+            tramo.setEstado(Tramo.EstadoTramo.ESTIMADO);
+            tramo.setOrigenCoordenadas(origenCoords);
+            tramo.setDestinoCoordenadas(destinoCoords);
+            tramo.setOrigenDescripcion(origenDesc);
+            tramo.setDestinoDescripcion(destinoDesc);
+            tramo.setDistanciaKm(0.0);
+            tramo.setFechaCreacion(LocalDateTime.now());
+            
+            Double costoAproximado = calcularCostoAproximado(request, 0.0);
+            tramo.setCostoAproximado(costoAproximado);
+            tramoService.save(tramo);
+        }
+    }
+    
+    /**
+     * Calcula el costo aproximado basado en peso, volumen y distancia del contenedor
+     */
+    private Double calcularCostoAproximado(RutaCreacionRequest request, double distanciaKm) {
+        BigDecimal costoBase = BigDecimal.valueOf(1000); // Costo base
+        BigDecimal costoPorPeso = request.getPesoContenedor() != null ? 
+                request.getPesoContenedor().multiply(BigDecimal.valueOf(10)) : BigDecimal.ZERO;
+        BigDecimal costoPorVolumen = request.getVolumenContenedor() != null ? 
+                request.getVolumenContenedor().multiply(BigDecimal.valueOf(50)) : BigDecimal.ZERO;
+        BigDecimal costoPorDistancia = BigDecimal.valueOf(distanciaKm * 2.5); // $2.5 por KM
+        
+        return costoBase.add(costoPorPeso).add(costoPorVolumen).add(costoPorDistancia).doubleValue();
     }
     
     /**

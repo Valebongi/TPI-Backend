@@ -295,6 +295,23 @@ public class SolicitudController {
         return ResponseEntity.ok(estadisticas);
     }
     
+    /**
+     * PUT /solicitudes/{id}/marcar-entregada - Marcar solicitud como entregada
+     * Endpoint para que el servicio de logística notifique cuando una ruta esté completa
+     */
+    @PutMapping("/{id}/marcar-entregada")
+    public ResponseEntity<Solicitud> marcarComoEntregada(@PathVariable Long id) {
+        // Log removed for Docker compatibility
+        
+        try {
+            Solicitud solicitudActualizada = solicitudService.actualizarEstado(id, "ENTREGADA");
+            return ResponseEntity.ok(solicitudActualizada);
+        } catch (Exception e) {
+            // Log removed for Docker compatibility
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
     // DTOs para las respuestas
     public static class SeguimientoResponse {
         private Long solicitudId;

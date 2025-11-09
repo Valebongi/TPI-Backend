@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import utnfc.isi.back.sim.domain.Tramo;
 import utnfc.isi.back.sim.repository.TramoRepository;
 import utnfc.isi.back.sim.client.AdministracionClient;
+import utnfc.isi.back.sim.client.PedidosClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,12 +21,14 @@ import java.util.Optional;
 public class TramoService {
     
     private final TramoRepository tramoRepository;
+    private final PedidosClient pedidosClient;
     // Comentado temporalmente para evitar problemas de inyección
     // private final AdministracionClient administracionClient;
 
     @Autowired
-    public TramoService(TramoRepository tramoRepository) {
+    public TramoService(TramoRepository tramoRepository, PedidosClient pedidosClient) {
         this.tramoRepository = tramoRepository;
+        this.pedidosClient = pedidosClient;
         // this.administracionClient = administracionClient;
     }
     
@@ -154,9 +157,9 @@ public class TramoService {
         Tramo tramo = tramoRepository.findById(tramoId)
                 .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + tramoId));
         
-        // Validar que el tramo esté en estado PENDIENTE
-        if (!Tramo.EstadoTramo.PENDIENTE.equals(tramo.getEstado())) {
-            throw new IllegalArgumentException("Solo se pueden asignar camiones a tramos en estado PENDIENTE");
+        // Validar que el tramo esté en estado ESTIMADO
+        if (!Tramo.EstadoTramo.ESTIMADO.equals(tramo.getEstado())) {
+            throw new IllegalArgumentException("Solo se pueden asignar camiones a tramos en estado ESTIMADO");
         }
         
         // Asignar el camión al tramo (versión simplificada sin validación externa)
@@ -226,5 +229,171 @@ public class TramoService {
                     return tramoRepository.save(tramo);
                 })
                 .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + id));
+    }
+    
+    /**
+     * MEJORA: Iniciar tramo con validación de secuencia
+     * Valida que no se inicie un tramo posterior antes que el anterior
+     */
+    public Tramo iniciarTramoConValidacion(Long tramoId) {
+        // Log removed for Docker compatibility
+        
+        Tramo tramo = tramoRepository.findById(tramoId)
+                .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + tramoId));
+        
+        // Validar estado actual
+        if (tramo.getEstado() != Tramo.EstadoTramo.ASIGNADO) {
+            throw new IllegalStateException("El tramo debe estar asignado para poder iniciarse");
+        }
+        
+        // Validar secuencia: verificar que tramos anteriores estén completados
+        validarSecuenciaTramos(tramo, "inicio");
+        
+        tramo.setEstado(Tramo.EstadoTramo.EN_PROGRESO);
+        tramo.setFechaHoraInicio(LocalDateTime.now());
+        
+        return tramoRepository.save(tramo);
+    }
+    
+    /**
+     * MEJORA: Finalizar tramo con validación de secuencia y actualización automática de solicitud
+     */
+    public Tramo finalizarTramoConValidacion(Long tramoId, Double costoReal) {
+        // Log removed for Docker compatibility
+        
+        Tramo tramo = tramoRepository.findById(tramoId)
+                .orElseThrow(() -> new RuntimeException("Tramo no encontrado con ID: " + tramoId));
+        
+        // Validar estado actual
+        if (tramo.getEstado() != Tramo.EstadoTramo.EN_PROGRESO) {
+            throw new IllegalStateException("El tramo debe estar en progreso para poder finalizarse");
+        }
+        
+        // Validar secuencia: verificar que tramos anteriores estén completados
+        validarSecuenciaTramos(tramo, "finalizacion");
+        
+        LocalDateTime ahora = LocalDateTime.now();
+        tramo.setEstado(Tramo.EstadoTramo.COMPLETADO);
+        tramo.setFechaHoraFin(ahora);
+        tramo.setCostoReal(costoReal);
+        
+        // Calcular tiempo real
+        if (tramo.getFechaHoraInicio() != null) {
+            long minutos = java.time.Duration.between(tramo.getFechaHoraInicio(), ahora).toMinutes();
+            tramo.setTiempoRealMinutos((int) minutos);
+        }
+        
+        Tramo tramoGuardado = tramoRepository.save(tramo);
+        
+        // MEJORA: Verificar si todos los tramos de la ruta están completados
+        verificarYActualizarSolicitudSiCompleta(tramo.getRuta().getId());
+        
+        return tramoGuardado;
+    }
+    
+    /**
+     * Valida la secuencia de ejecución de tramos
+     * No se puede iniciar/finalizar un tramo posterior antes que los anteriores
+     */
+    private void validarSecuenciaTramos(Tramo tramoActual, String operacion) {
+        List<Tramo> tramosDeRuta = tramoRepository.findByRutaIdOrderByNumero(tramoActual.getRuta().getId());
+        
+        for (Tramo tramo : tramosDeRuta) {
+            // Solo verificar tramos anteriores (número menor)
+            if (tramo.getNumero() < tramoActual.getNumero()) {
+                // Para inicio: tramos anteriores deben estar al menos EN_PROGRESO o COMPLETADO
+                if ("inicio".equals(operacion)) {
+                    if (tramo.getEstado() == Tramo.EstadoTramo.ESTIMADO || 
+                        tramo.getEstado() == Tramo.EstadoTramo.ASIGNADO) {
+                        throw new IllegalStateException(
+                            String.format("No se puede iniciar el tramo %d antes de completar el tramo %d", 
+                                        tramoActual.getNumero(), tramo.getNumero()));
+                    }
+                }
+                // Para finalización: tramos anteriores deben estar COMPLETADO
+                else if ("finalizacion".equals(operacion)) {
+                    if (tramo.getEstado() != Tramo.EstadoTramo.COMPLETADO) {
+                        throw new IllegalStateException(
+                            String.format("No se puede finalizar el tramo %d antes de completar el tramo %d", 
+                                        tramoActual.getNumero(), tramo.getNumero()));
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Verifica si todos los tramos de una ruta están completados y actualiza la solicitud
+     */
+    private void verificarYActualizarSolicitudSiCompleta(Long rutaId) {
+        List<Tramo> tramosDeRuta = tramoRepository.findByRutaId(rutaId);
+        
+        boolean todosCompletados = tramosDeRuta.stream()
+                .allMatch(tramo -> tramo.getEstado() == Tramo.EstadoTramo.COMPLETADO);
+        
+        if (todosCompletados) {
+            // Log de éxito
+            System.out.println("=== TODOS LOS TRAMOS COMPLETADOS - Ruta ID: " + rutaId + " ===");
+            
+            // TODO: Llamar al servicio de pedidos para actualizar solicitud a ENTREGADA
+            // Esto requiere comunicación con el ServicioPedidos
+            notificarSolicitudEntregada(rutaId, tramosDeRuta);
+        }
+    }
+    
+    /**
+     * MEJORA: Notifica al ServicioPedidos que la solicitud debe marcarse como ENTREGADA
+     * Implementa comunicación real a través del API Gateway
+     */
+    private void notificarSolicitudEntregada(Long rutaId, List<Tramo> tramos) {
+        try {
+            // Calcular costo total real
+            Double costoTotalReal = tramos.stream()
+                    .filter(tramo -> tramo.getCostoReal() != null)
+                    .mapToDouble(Tramo::getCostoReal)
+                    .sum();
+            
+            // Obtener la solicitudId desde cualquier tramo (todos pertenecen a la misma ruta)
+            if (!tramos.isEmpty()) {
+                Long solicitudId = tramos.get(0).getRuta().getSolicitudId();
+                
+                System.out.println("=== NOTIFICACIÓN: Iniciando actualización de solicitud ===");
+                System.out.println("Solicitud ID: " + solicitudId);
+                System.out.println("Ruta ID: " + rutaId);
+                System.out.println("Costo total real: $" + costoTotalReal);
+                System.out.println("Tramos completados: " + tramos.size());
+                
+                // Llamada real al ServicioPedidos a través del API Gateway
+                boolean actualizado = pedidosClient.actualizarSolicitudAEntregada(solicitudId, costoTotalReal);
+                
+                if (actualizado) {
+                    System.out.println("=== ✅ ÉXITO: Solicitud " + solicitudId + " marcada como ENTREGADA ===");
+                } else {
+                    System.err.println("=== ❌ ERROR: Falló la actualización de solicitud " + solicitudId + " ===");
+                }
+            } else {
+                System.err.println("=== ERROR: No se encontraron tramos para la ruta " + rutaId + " ===");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("=== ERROR CRÍTICO: Falló notificación de solicitud entregada ===");
+            System.err.println("Ruta ID: " + rutaId + ", Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Obtiene todos los tramos de una ruta ordenados por número
+     */
+    public List<Tramo> findByRutaIdOrderByNumero(Long rutaId) {
+        return tramoRepository.findByRutaIdOrderByNumero(rutaId);
+    }
+    
+    /**
+     * Verifica si una ruta está completamente finalizada
+     */
+    public boolean esRutaCompletada(Long rutaId) {
+        List<Tramo> tramos = tramoRepository.findByRutaId(rutaId);
+        return tramos.stream().allMatch(tramo -> tramo.getEstado() == Tramo.EstadoTramo.COMPLETADO);
     }
 }

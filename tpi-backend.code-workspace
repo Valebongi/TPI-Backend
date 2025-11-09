@@ -1,0 +1,45 @@
+{
+    "folders": [
+        {
+            "name": "TPI-Backend (Root)",
+            "path": "."
+        },
+        {
+            "name": "API Gateway",
+            "path": "./ApiGateway"
+        },
+        {
+            "name": "Servicio Administración", 
+            "path": "./ServicioAdministracion"
+        },
+        {
+            "name": "Servicio Logística",
+            "path": "./ServicioLogistica"
+        },
+        {
+            "name": "Servicio Pedidos",
+            "path": "./ServicioPedidos"
+        },
+        {
+            "name": "Servicio Geolocalización",
+            "path": "./ServicioGeolocalizacion"
+        }
+    ],
+    "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "disabled",
+        "maven.terminal.useJavaHome": true,
+        "maven.terminal.customEnv": [
+            {
+                "environmentVariable": "JAVA_HOME",
+                "value": "${java.home}"
+            }
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "vscjava.vscode-java-pack",
+            "vscjava.vscode-maven"
+        ]
+    }
+}
