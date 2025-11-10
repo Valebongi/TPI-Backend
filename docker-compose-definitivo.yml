@@ -15,6 +15,11 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tpi_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # API Gateway - Puerto de entrada único
   api-gateway:
@@ -101,6 +106,43 @@ services:
     networks:
       - backend
     restart: unless-stopped
+
+  # Keycloak - Authorization Server (según material cátedra)
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    container_name: tpi-keycloak
+    hostname: tpi-keycloak
+    ports:
+      - "8085:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin123
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak_db
+      - KC_DB_USERNAME=tpi_user
+      - KC_DB_PASSWORD=tpi_pass
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HTTP_ENABLED=true
+    command:
+      - start-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Configurador automático de Keycloak
+  keycloak-config:
+    build:
+      context: ./keycloak-config
+    container_name: tpi-keycloak-config
+    depends_on:
+      - keycloak
+    networks:
+      - backend
+    restart: "no"
 
 # Red backend como especifica el apunte
 networks:
