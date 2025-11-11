@@ -52,9 +52,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/depositos/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/parametros/**").hasRole("ADMIN")
                 
-                // Endpoints ADMIN + TRANSPORTISTA (consultas administrativas)
-                .requestMatchers(HttpMethod.GET, "/depositos", "/depositos/**").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.GET, "/parametros", "/parametros/**").hasAnyRole("ADMIN", "TRANSPORTISTA")
+                // Endpoints de consulta accesibles por CLIENTE, ADMIN y TRANSPORTISTA (para permitir solicitudes)
+                .requestMatchers(HttpMethod.GET, "/depositos", "/depositos/**").hasAnyRole("ADMIN", "TRANSPORTISTA", "CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/parametros", "/parametros/**").hasAnyRole("ADMIN", "TRANSPORTISTA", "CLIENTE")
                 
                 // Todo lo demás requiere autenticación
                 .anyRequest().authenticated()

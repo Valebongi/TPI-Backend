@@ -1,0 +1,9 @@
+﻿{
+  "clientId": "tpi-service-account",
+  "enabled": true,
+  "serviceAccountsEnabled": true,
+  "publicClient": false,
+  "standardFlowEnabled": false,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false
+}
