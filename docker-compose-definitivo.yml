@@ -10,7 +10,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./database/data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - backend
@@ -31,13 +30,22 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - servicio-administracion
-      - servicio-geolocalizacion
-      - servicio-logistica
-      - servicio-pedidos
+      servicio-administracion:
+        condition: service_healthy
+      servicio-geolocalizacion:
+        condition: service_healthy
+      servicio-logistica:
+        condition: service_healthy
+      servicio-pedidos:
+        condition: service_healthy
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 2
 
   # Servicio de Geolocalización - Sin base de datos
   servicio-geolocalizacion:
@@ -51,6 +59,11 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 2
 
   # Servicio de Administración
   servicio-administracion:
@@ -64,11 +77,19 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tpi_backend_administracion_db
       - SPRING_DATASOURCE_USERNAME=tpi_user
       - SPRING_DATASOURCE_PASSWORD=tpi_pass
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 2
 
   # Servicio de Logística
   servicio-logistica:
@@ -83,11 +104,18 @@ services:
       - SPRING_DATASOURCE_USERNAME=tpi_user
       - SPRING_DATASOURCE_PASSWORD=tpi_pass
     depends_on:
-      - postgres
-      - servicio-administracion
+      postgres:
+        condition: service_healthy
+      servicio-administracion:
+        condition: service_healthy
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 2
 
   # Servicio de Pedidos
   servicio-pedidos:
@@ -102,10 +130,16 @@ services:
       - SPRING_DATASOURCE_USERNAME=tpi_user
       - SPRING_DATASOURCE_PASSWORD=tpi_pass
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 2
 
   # Keycloak - Authorization Server (según material cátedra)
   keycloak:

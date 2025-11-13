@@ -36,6 +36,11 @@ spring:
             - Path=/api/geo/**
           filters:
             - StripPrefix=2
+        # Keycloak (Autenticación)
+        - id: keycloak
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/auth/**
 
 # Configuración de Eureka (si se usa)
 eureka:

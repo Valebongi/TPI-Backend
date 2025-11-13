@@ -17,10 +17,10 @@ public class Deposito {
     @Column(name = "direccion", length = 400)
     private String direccion;
 
-    @Column(name = "latitud", precision = 9, scale = 6)
+    @Column(name = "latitud", precision = 10, scale = 8)
     private BigDecimal latitud;
 
-    @Column(name = "longitud", precision = 9, scale = 6)
+    @Column(name = "longitud", precision = 10, scale = 8)
     private BigDecimal longitud;
 
     @Column(name = "costo_diario", precision = 10, scale = 2)

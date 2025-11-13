@@ -13,8 +13,7 @@ import java.math.BigDecimal;
 public class Contenedor {
     
     @Id
-    @SequenceGenerator(name = "seq_contenedor", sequenceName = "SEQ_CONTENEDOR_ID", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_contenedor")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_CONTENEDOR")
     private Long id;
 

@@ -31,7 +31,7 @@ COPY --from=build /app/target/*.jar app.jar
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
 # Exponer puerto
-EXPOSE 8084
+EXPOSE 8080
 
 # Punto de entrada con configuración optimizada para contenedores
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -10,8 +10,7 @@ import jakarta.validation.constraints.Size;
 public class Cliente {
     
     @Id
-    @SequenceGenerator(name = "seq_cliente", sequenceName = "SEQ_CLIENTE_ID", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_cliente")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_CLIENTE")
     private Long id;
 

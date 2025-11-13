@@ -11,8 +11,7 @@ import java.time.LocalDateTime;
 public class Solicitud {
     
     @Id
-    @SequenceGenerator(name = "seq_solicitud", sequenceName = "SEQ_SOLICITUD_ID", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_solicitud")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_SOLICITUD")
     private Long id;
 
