@@ -146,11 +146,11 @@ public class TramoService {
     }
     
     /**
-     * FASE 4: Asigna un tramo a un camión (versión simplificada)
-     * Simplificada temporalmente para bypass de validación
+     * FASE 4: Asigna un tramo a un camión con validaciones completas
+     * MEJORADO: Validación con ServicioAdministracion usando endpoints internos
      */
     public Tramo asignarCamion(Long tramoId, Long camionId) {
-        // Log removed for Docker compatibility
+        System.out.println("=== TRAMO SERVICE: Asignando camión ID: " + camionId + " a tramo ID: " + tramoId + " ===");
         
         // Validar que el tramo existe
         Tramo tramo = tramoRepository.findById(tramoId)
@@ -161,11 +161,26 @@ public class TramoService {
             throw new IllegalArgumentException("Solo se pueden asignar camiones a tramos en estado ESTIMADO");
         }
         
-        // Asignar el camión al tramo (versión simplificada sin validación externa)
-        // TODO: Reactivar validación con ServicioAdministracion una vez que la comunicación funcione
+        // Validar que el camión existe y está disponible
+        if (!administracionClient.existeCamion(camionId)) {
+            throw new IllegalArgumentException("El camión con ID " + camionId + " no existe");
+        }
+        
+        if (!administracionClient.camionDisponible(camionId)) {
+            throw new IllegalArgumentException("El camión con ID " + camionId + " no está disponible");
+        }
+        
+        // Cambiar estado del camión a ASIGNADO
+        boolean estadoCambiado = administracionClient.cambiarEstadoCamion(camionId, "ASIGNADO");
+        if (!estadoCambiado) {
+            throw new RuntimeException("Error al cambiar el estado del camión");
+        }
+        
+        // Asignar el camión al tramo
         tramo.setCamionId(camionId);
         tramo.setEstado(Tramo.EstadoTramo.ASIGNADO);
         
+        System.out.println("=== TRAMO SERVICE: Camión asignado exitosamente ===");
         return tramoRepository.save(tramo);
     }
     

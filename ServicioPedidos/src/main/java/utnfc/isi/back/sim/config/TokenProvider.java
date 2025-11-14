@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 /**
  * Proveedor de tokens automático para comunicación entre servicios
@@ -28,6 +29,7 @@ import java.time.temporal.ChronoUnit;
  * - Configuración via properties
  */
 @Component
+@ConditionalOnProperty(name = "keycloak.service-account.client-id")
 public class TokenProvider {
 
     @Value("${keycloak.service-account.client-id}")
@@ -36,8 +38,14 @@ public class TokenProvider {
     @Value("${keycloak.service-account.client-secret}")
     private String clientSecret;
 
-    @Value("${keycloak.service-account.token-uri}")
+    @Value("${keycloak.service-account.token-uri-external:${keycloak.service-account.token-uri}}")
     private String tokenUri;
+
+    @Value("${keycloak.service-account.username:}")
+    private String username;
+
+    @Value("${keycloak.service-account.password:}")
+    private String password;
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -81,11 +89,22 @@ public class TokenProvider {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-            // Preparar body con client credentials
+            // Preparar body - usar password flow si está configurado, sino client_credentials
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-            body.add("grant_type", "client_credentials");
-            body.add("client_id", clientId);
-            body.add("client_secret", clientSecret);
+            
+            if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
+                // Password Flow (funciona con tpi-backend-client)
+                body.add("grant_type", "password");
+                body.add("client_id", clientId);
+                body.add("username", username);
+                body.add("password", password);
+                body.add("scope", "openid profile email");
+            } else {
+                // Client Credentials Flow (requiere service account configurado)
+                body.add("grant_type", "client_credentials");
+                body.add("client_id", clientId);
+                body.add("client_secret", clientSecret);
+            }
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 

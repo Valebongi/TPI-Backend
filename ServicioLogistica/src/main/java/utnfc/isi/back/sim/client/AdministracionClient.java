@@ -25,11 +25,11 @@ public class AdministracionClient {
     }
 
     /**
-     * Verifica si un camión existe y está disponible
+     * Verifica si un camión existe y está disponible (usando endpoint interno)
      */
     public boolean existeCamion(Long camionId) {
         try {
-            String url = administracionServiceUrl + "/camiones/" + camionId;
+            String url = administracionServiceUrl + "/camiones/" + camionId + "/interno";
             ResponseEntity<CamionResponse> response = restTemplate.getForEntity(url, CamionResponse.class);
             return response.getStatusCode().is2xxSuccessful() && response.getBody() != null;
         } catch (Exception e) {
@@ -39,17 +39,54 @@ public class AdministracionClient {
     }
 
     /**
-     * Obtiene los detalles de un camión
+     * Verifica si un camión está disponible (usando endpoint interno específico)
+     */
+    public boolean camionDisponible(Long camionId) {
+        try {
+            String url = administracionServiceUrl + "/camiones/" + camionId + "/disponible/interno";
+            ResponseEntity<Boolean> response = restTemplate.getForEntity(url, Boolean.class);
+            return response.getStatusCode().is2xxSuccessful() && Boolean.TRUE.equals(response.getBody());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene los detalles de un camión (usando endpoint interno)
      */
     public CamionResponse obtenerCamion(Long camionId) {
         try {
-            String url = administracionServiceUrl + "/camiones/" + camionId;
+            String url = administracionServiceUrl + "/camiones/" + camionId + "/interno";
             ResponseEntity<CamionResponse> response = restTemplate.getForEntity(url, CamionResponse.class);
             return response.getBody();
         } catch (Exception e) {
             throw new RuntimeException("Error al obtener el camión: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Cambia el estado de un camión (usando endpoint interno)
+     */
+    public boolean cambiarEstadoCamion(Long camionId, String nuevoEstado) {
+        try {
+            String url = administracionServiceUrl + "/camiones/" + camionId + "/estado/interno";
+            
+            EstadoCamionRequest request = new EstadoCamionRequest(nuevoEstado);
+            ResponseEntity<CamionResponse> response = restTemplate.exchange(
+                url, 
+                org.springframework.http.HttpMethod.PUT, 
+                new HttpEntity<>(request), 
+                CamionResponse.class
+            );
+            
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            System.out.println("=== ADMIN CLIENT: Error al cambiar estado de camión: " + e.getMessage() + " ===");
+            return false;
+        }
+    }
+        
+    
     
     /**
      * Obtiene todos los depósitos disponibles
@@ -152,5 +189,19 @@ public class AdministracionClient {
         
         public String getDescripcion() { return descripcion; }
         public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    }
+
+    // DTO para cambio de estado de camión
+    public static class EstadoCamionRequest {
+        private String estado;
+        
+        public EstadoCamionRequest() {}
+        
+        public EstadoCamionRequest(String estado) {
+            this.estado = estado;
+        }
+        
+        public String getEstado() { return estado; }
+        public void setEstado(String estado) { this.estado = estado; }
     }
 }

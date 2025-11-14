@@ -54,6 +54,15 @@ public class DepositoController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    // ENDPOINT INTERNO: Para uso interno entre servicios (sin autenticación)
+    @GetMapping("/{id}/interno")
+    public ResponseEntity<Deposito> getInterno(@PathVariable Integer id) {
+        System.out.println("=== SERVICIO ADMIN: Consulta interna de depósito ID: " + id + " ===");
+        return depositoService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
     
     // DTO para coordenadas
     public static class CoordenadasResponse {

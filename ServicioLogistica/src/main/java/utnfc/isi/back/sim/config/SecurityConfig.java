@@ -49,31 +49,17 @@ public class SecurityConfig {
                 // Endpoints públicos
                 .requestMatchers(HttpMethod.GET, "/", "/actuator/health").permitAll()
                 
-                // Endpoints SOLO ADMIN (gestión crítica)
-                .requestMatchers(HttpMethod.DELETE, "/rutas/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/tramos/**").hasRole("ADMIN")
+                // ENDPOINTS PROTEGIDOS ESPECÍFICOS
+                .requestMatchers(HttpMethod.POST, "/rutas/desde-solicitud/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/tramos/*/asignar").hasRole("ADMIN")
                 
-                // Endpoints ADMIN + TRANSPORTISTA (operaciones logísticas)
-                .requestMatchers(HttpMethod.POST, "/rutas/**").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/rutas/**").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.POST, "/tramos/**").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/asignar").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/camion").hasAnyRole("ADMIN", "TRANSPORTISTA")
+                // ENDPOINTS INTERNOS SIN AUTENTICACIÓN (para comunicación entre servicios)
+                .requestMatchers(HttpMethod.POST, "/tramos/automaticos/interno").permitAll()
+                .requestMatchers(HttpMethod.GET, "/tramos/*/interno").permitAll()
+                .requestMatchers(HttpMethod.POST, "/rutas/tentativas/interno").permitAll()
                 
-                // Endpoints específicos TRANSPORTISTA (gestión de viajes)
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/iniciar").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/finalizar").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/iniciar-validado").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/finalizar-validado").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/finalizar-automatico").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                .requestMatchers(HttpMethod.PUT, "/tramos/**/estado").hasAnyRole("ADMIN", "TRANSPORTISTA")
-                
-                // Endpoints de consulta - Acceso para todos los roles autenticados
-                .requestMatchers(HttpMethod.GET, "/rutas/**").authenticated()
-                .requestMatchers(HttpMethod.GET, "/tramos/**").authenticated()
-                
-                // Todo lo demás requiere autenticación
-                .anyRequest().authenticated()
+                // TODO LO DEMÁS SIN AUTENTICACIÓN (temporalmente)
+                .anyRequest().permitAll()
             )
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.disable());

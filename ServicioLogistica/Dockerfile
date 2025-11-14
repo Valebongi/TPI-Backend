@@ -3,17 +3,26 @@ FROM maven:3.9 AS build
 
 WORKDIR /app
 
+# Copiar configuración personalizada de Maven
+COPY maven-settings.xml /usr/share/maven/conf/settings.xml
+
 # Copiar solo pom.xml primero para aprovechar cache de Docker
 COPY pom.xml .
 
-# Descargar dependencias (se cachea si no cambia pom.xml)
-RUN mvn dependency:go-offline -B
+# Descargar dependencias con configuración mejorada (se cachea si no cambia pom.xml)
+RUN mvn dependency:go-offline -B -s /usr/share/maven/conf/settings.xml \
+    -Dmaven.wagon.http.connectionTimeout=60000 \
+    -Dmaven.wagon.http.readTimeout=120000 \
+    -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 \
+    -Dmaven.wagon.http.retryHandler.count=3
 
 # Copiar código fuente
 COPY src src
 
-# Compilar aplicación
-RUN mvn clean package -DskipTests
+# Compilar aplicación con configuración mejorada
+RUN mvn clean package -DskipTests -B -s /usr/share/maven/conf/settings.xml \
+    -Dmaven.wagon.http.connectionTimeout=60000 \
+    -Dmaven.wagon.http.readTimeout=120000
 
 # Imagen de runtime más pequeña
 FROM eclipse-temurin:21-jre-alpine

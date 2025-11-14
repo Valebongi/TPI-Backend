@@ -513,4 +513,36 @@ public class SolicitudController {
                    '}';
         }
     }
+
+    /**
+     * PATCH /solicitudes/{id}/estado/interno - Cambio interno de estado sin autenticación
+     * Para uso interno entre servicios
+     */
+    @PatchMapping("/{id}/estado/interno")
+    public ResponseEntity<Solicitud> cambiarEstadoInterno(@PathVariable Long id, @RequestBody CambioEstadoRequest request) {
+        System.out.println("=== SERVICIO PEDIDOS: Cambio interno de estado para solicitud ID: " + id + " ===");
+        
+        try {
+            Solicitud solicitud = solicitudService.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada"));
+            
+            solicitud.setEstado(request.getNuevoEstado());
+            Solicitud solicitudActualizada = solicitudService.save(solicitud);
+            
+            return ResponseEntity.ok(solicitudActualizada);
+        } catch (Exception e) {
+            System.err.println("Error en cambio interno de estado: " + e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // DTO para cambio de estado interno
+    public static class CambioEstadoRequest {
+        private String nuevoEstado;
+        
+        public CambioEstadoRequest() {}
+        
+        public String getNuevoEstado() { return nuevoEstado; }
+        public void setNuevoEstado(String nuevoEstado) { this.nuevoEstado = nuevoEstado; }
+    }
 }

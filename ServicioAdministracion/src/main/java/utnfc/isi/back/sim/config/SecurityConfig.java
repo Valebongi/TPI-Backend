@@ -44,20 +44,23 @@ public class SecurityConfig {
                 // Endpoints públicos
                 .requestMatchers(HttpMethod.GET, "/", "/actuator/health").permitAll()
                 
-                // Endpoints SOLO ADMIN (operador/administrador)
+                // ENDPOINTS INTERNOS SIN AUTENTICACIÓN (para comunicación entre servicios)
+                .requestMatchers(HttpMethod.GET, "/depositos/*/interno").permitAll()
+                .requestMatchers(HttpMethod.GET, "/camiones/*/interno").permitAll()
+                .requestMatchers(HttpMethod.GET, "/camiones/*/disponible/interno").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/camiones/*/estado/interno").permitAll()
+                .requestMatchers(HttpMethod.GET, "/parametros/interno").permitAll()
+                
+                // ENDPOINTS PROTEGIDOS ESPECÍFICOS
                 .requestMatchers(HttpMethod.POST, "/depositos").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/parametros").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/depositos/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/parametros/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/depositos/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/parametros/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/depositos").hasAnyRole("ADMIN", "TRANSPORTISTA", "CLIENTE")
+                .requestMatchers(HttpMethod.POST, "/camiones").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/camiones", "/camiones/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/camiones/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/camiones/**").hasRole("ADMIN")
                 
-                // Endpoints de consulta accesibles por CLIENTE, ADMIN y TRANSPORTISTA (para permitir solicitudes)
-                .requestMatchers(HttpMethod.GET, "/depositos", "/depositos/**").hasAnyRole("ADMIN", "TRANSPORTISTA", "CLIENTE")
-                .requestMatchers(HttpMethod.GET, "/parametros", "/parametros/**").hasAnyRole("ADMIN", "TRANSPORTISTA", "CLIENTE")
-                
-                // Todo lo demás requiere autenticación
-                .anyRequest().authenticated()
+                // TODO LO DEMÁS SIN AUTENTICACIÓN
+                .anyRequest().permitAll()
             )
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.disable());

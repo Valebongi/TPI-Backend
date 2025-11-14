@@ -288,4 +288,34 @@ public class RutaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    /**
+     * POST /rutas/tentativas/interno - Endpoint interno para calcular rutas tentativas sin autenticación
+     * Para uso interno entre servicios
+     */
+    @PostMapping("/tentativas/interno")
+    public ResponseEntity<List<RutaTentativa>> calcularRutasTentativasInterno(@RequestBody RutaCalculoRequest request) {
+        System.out.println("=== SERVICIO LOGISTICA: Cálculo interno de rutas tentativas ===");
+        try {
+            List<RutaTentativa> rutasTentativas = rutaService.calcularRutasTentativas(request.getOrigen(), request.getDestino());
+            return ResponseEntity.ok(rutasTentativas);
+        } catch (Exception e) {
+            System.err.println("Error en cálculo interno de rutas: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // DTO para request interno
+    public static class RutaCalculoRequest {
+        private String origen;
+        private String destino;
+        
+        public RutaCalculoRequest() {}
+        
+        public String getOrigen() { return origen; }
+        public void setOrigen(String origen) { this.origen = origen; }
+        
+        public String getDestino() { return destino; }
+        public void setDestino(String destino) { this.destino = destino; }
+    }
 }

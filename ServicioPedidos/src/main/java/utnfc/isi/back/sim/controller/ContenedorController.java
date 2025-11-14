@@ -9,6 +9,7 @@ import utnfc.isi.back.sim.domain.Contenedor;
 import utnfc.isi.back.sim.service.ContenedorService;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/contenedores")
@@ -112,6 +113,26 @@ public class ContenedorController {
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             // Log removed for Docker compatibility
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * GET /contenedores/{id}/interno - Consulta interna de contenedor sin autenticación
+     * Para uso interno entre servicios
+     */
+    @GetMapping("/{id}/interno")
+    public ResponseEntity<Contenedor> getContenedorInterno(@PathVariable Long id) {
+        System.out.println("=== SERVICIO PEDIDOS: Consulta interna de contenedor ID: " + id + " ===");
+        
+        try {
+            Optional<Contenedor> contenedorOpt = contenedorService.findById(id);
+            if (contenedorOpt.isPresent()) {
+                return ResponseEntity.ok(contenedorOpt.get());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
     }

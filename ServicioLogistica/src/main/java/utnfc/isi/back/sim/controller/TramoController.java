@@ -10,6 +10,7 @@ import utnfc.isi.back.sim.dto.AsignarCamionRequest;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controlador REST para la gestión de tramos
@@ -340,5 +341,76 @@ public class TramoController {
         public void setCompletada(Boolean completada) { this.completada = completada; }
         public List<Tramo> getTramos() { return tramos; }
         public void setTramos(List<Tramo> tramos) { this.tramos = tramos; }
+    }
+
+    /**
+     * GET /tramos/{id}/interno - Consulta interna de tramo sin autenticación
+     * Para uso interno entre servicios
+     */
+    @GetMapping("/{id}/interno")
+    public ResponseEntity<Tramo> obtenerTramoInterno(@PathVariable Long id) {
+        System.out.println("=== SERVICIO LOGISTICA: Consulta interna de tramo ID: " + id + " ===");
+        try {
+            Optional<Tramo> tramoOpt = tramoService.findById(id);
+            if (tramoOpt.isPresent()) {
+                return ResponseEntity.ok(tramoOpt.get());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * POST /tramos/automaticos/interno - Creación automática de tramos sin autenticación
+     * Para uso interno cuando se asigna una ruta
+     */
+    @PostMapping("/automaticos/interno")
+    public ResponseEntity<String> crearTramosAutomaticos(@RequestBody CrearTramosRequest request) {
+        System.out.println("=== SERVICIO LOGISTICA: Creación automática de tramos para ruta ID: " + request.getRutaId() + " ===");
+        try {
+            // Por ahora, simplemente confirmamos la recepción
+            // Este endpoint se puede implementar completamente más adelante según las necesidades específicas
+            String mensaje = "Solicitud de creación de tramos recibida para ruta ID: " + request.getRutaId();
+            System.out.println(mensaje);
+            return ResponseEntity.ok(mensaje);
+        } catch (Exception e) {
+            System.err.println("Error en creación automática de tramos: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // DTOs para endpoints internos
+    public static class CrearTramosRequest {
+        private Long rutaId;
+        private List<TramoInfo> tramosTentativo;
+        
+        public CrearTramosRequest() {}
+        
+        public Long getRutaId() { return rutaId; }
+        public void setRutaId(Long rutaId) { this.rutaId = rutaId; }
+        
+        public List<TramoInfo> getTramosTentativo() { return tramosTentativo; }
+        public void setTramosTentativo(List<TramoInfo> tramosTentativo) { this.tramosTentativo = tramosTentativo; }
+    }
+
+    public static class TramoInfo {
+        private String origen;
+        private String destino;
+        private Double distanciaKm;
+        private Double costoEstimado;
+        
+        public TramoInfo() {}
+        
+        // Getters y setters
+        public String getOrigen() { return origen; }
+        public void setOrigen(String origen) { this.origen = origen; }
+        public String getDestino() { return destino; }
+        public void setDestino(String destino) { this.destino = destino; }
+        public Double getDistanciaKm() { return distanciaKm; }
+        public void setDistanciaKm(Double distanciaKm) { this.distanciaKm = distanciaKm; }
+        public Double getCostoEstimado() { return costoEstimado; }
+        public void setCostoEstimado(Double costoEstimado) { this.costoEstimado = costoEstimado; }
     }
 }

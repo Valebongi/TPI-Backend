@@ -39,38 +39,23 @@ public class SecurityConfig {
                 // Deshabilitar CSRF para APIs REST
                 .csrf(AbstractHttpConfigurer::disable)
                 
-                // Configurar autorización por endpoints según estrategia de 3 roles
+                // Configuración simplificada de autorización - Solo endpoints específicos protegidos
                 .authorizeHttpRequests(authorize -> authorize
                         // Endpoints públicos
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/health").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/").permitAll()  // Home endpoint
+                        .requestMatchers(HttpMethod.GET, "/").permitAll()
                         
-                        // Endpoints de clientes - ADMIN gestiona, CLIENTE ve su perfil
-                        .requestMatchers(HttpMethod.POST, "/clientes").hasRole("ADMIN")  // Solo ADMIN crea clientes
-                        .requestMatchers(HttpMethod.PUT, "/clientes/**").hasAnyRole("ADMIN", "CLIENTE")  // ADMIN o propio cliente
-                        .requestMatchers(HttpMethod.DELETE, "/clientes/**").hasRole("ADMIN")  // Solo ADMIN elimina
-                        .requestMatchers(HttpMethod.GET, "/clientes/**").hasAnyRole("ADMIN", "CLIENTE")  // ADMIN ve todos, CLIENTE el suyo
+                        // ENDPOINTS PROTEGIDOS ESPECÍFICOS
+                        .requestMatchers(HttpMethod.POST, "/clientes").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/clientes").hasAnyRole("ADMIN", "CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/contenedores").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/contenedores").hasAnyRole("ADMIN", "TRANSPORTISTA", "CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/solicitudes").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/solicitudes").hasRole("CLIENTE")
                         
-                        // Endpoints de contenedores - ADMIN gestiona, CLIENTE sus contenedores
-                        .requestMatchers(HttpMethod.POST, "/contenedores").hasAnyRole("ADMIN", "CLIENTE")  // ADMIN y CLIENTE pueden crear
-                        .requestMatchers(HttpMethod.PUT, "/contenedores/**").hasRole("ADMIN")  // Solo ADMIN modifica
-                        .requestMatchers(HttpMethod.DELETE, "/contenedores/**").hasRole("ADMIN")  // Solo ADMIN elimina
-                        .requestMatchers(HttpMethod.PATCH, "/contenedores/**/estado").hasAnyRole("ADMIN", "TRANSPORTISTA")  // Estado lo cambia admin/transportista
-                        .requestMatchers(HttpMethod.GET, "/contenedores/**").hasAnyRole("ADMIN", "CLIENTE", "TRANSPORTISTA")  // Todos pueden consultar
-                        
-                        // Endpoints adicionales de clientes
-                        .requestMatchers(HttpMethod.PATCH, "/clientes/**/desactivar").hasRole("ADMIN")  // Solo admin desactiva
-                        
-                        // Endpoints de solicitudes según roles y lógica de negocio
-                        .requestMatchers(HttpMethod.POST, "/solicitudes").hasAnyRole("CLIENTE", "ADMIN")  // Cliente crea, admin también
-                        .requestMatchers(HttpMethod.PUT, "/solicitudes/**/estado").hasAnyRole("ADMIN", "TRANSPORTISTA")  // Admin y transportista cambian estado
-                        .requestMatchers(HttpMethod.PUT, "/solicitudes/**").hasRole("ADMIN")  // Solo admin modifica otros campos
-                        .requestMatchers(HttpMethod.DELETE, "/solicitudes/**").hasRole("ADMIN")  // Solo admin elimina
-                        .requestMatchers(HttpMethod.GET, "/solicitudes/**").hasAnyRole("ADMIN", "CLIENTE", "TRANSPORTISTA")  // Todos pueden consultar
-                        
-                        // Cualquier otra petición requiere autenticación
-                        .anyRequest().authenticated()
+                        // TODO LO DEMÁS SIN AUTENTICACIÓN
+                        .anyRequest().permitAll()
                 )
                 
                 // Configurar Resource Server JWT

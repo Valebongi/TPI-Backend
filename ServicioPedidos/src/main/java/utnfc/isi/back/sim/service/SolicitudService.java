@@ -134,6 +134,7 @@ public class SolicitudService {
         // PASO 2: Ahora buscar y actualizar los datos del depósito
         System.out.println("=== PASO 2: Buscando datos del depósito ===");
         try {
+            // Usar el método con interceptor automático para la llamada interna
             DepositoResponse deposito = administracionClient.obtenerDeposito(contenedor.getIdDeposito());
             System.out.println("Depósito obtenido exitosamente: " + deposito.getDireccion());
             

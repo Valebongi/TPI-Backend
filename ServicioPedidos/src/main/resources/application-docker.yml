@@ -30,3 +30,10 @@ logging:
   level:
     utnfc.isi.back.sim: DEBUG
     org.hibernate.SQL: DEBUG
+
+# Configuración de servicios externos para Docker
+servicio:
+  logistica:
+    url: http://tpi-api-gateway:8080/api/logistica
+  administracion:
+    url: http://tpi-api-gateway:8080/api/admin

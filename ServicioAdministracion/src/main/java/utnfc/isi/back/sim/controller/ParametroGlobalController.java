@@ -45,4 +45,11 @@ public class ParametroGlobalController {
         parametroGlobalService.deleteById(clave);
         return ResponseEntity.noContent().build();
     }
+
+    // ENDPOINT INTERNO: Para uso interno entre servicios (sin autenticación)
+    @GetMapping("/interno")
+    public ResponseEntity<List<ParametroGlobal>> getAllInterno() {
+        System.out.println("=== SERVICIO ADMIN: Consulta interna de parámetros ===");
+        return ResponseEntity.ok(parametroGlobalService.findAll());
+    }
 }
